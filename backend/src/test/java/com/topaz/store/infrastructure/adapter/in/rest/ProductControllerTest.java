@@ -1,0 +1,187 @@
+package com.topaz.store.infrastructure.adapter.in.rest;
+
+import com.topaz.store.domain.model.Product;
+import com.topaz.store.domain.model.ProductCategory;
+import com.topaz.store.domain.port.in.GetProductByIdUseCase;
+import com.topaz.store.domain.port.in.GetProductsUseCase;
+import com.topaz.store.infrastructure.exception.ExternalServiceException;
+import com.topaz.store.infrastructure.exception.ExternalServiceTimeoutException;
+import com.topaz.store.infrastructure.exception.GlobalExceptionHandler;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(MockitoExtension.class)
+class ProductControllerTest {
+
+    private static final String BASE_URL = "/api/products";
+    private static final String BY_ID_URL = "/api/products/{id}";
+    private static final String NON_NUMERIC_ID = "invalid-id";
+    private static final Long EXISTING_ID = 1L;
+    private static final Long NON_EXISTING_ID = 999L;
+    private static final String SAMPLE_TITLE = "Essence Mascara";
+    private static final String SAMPLE_DESCRIPTION = "High volume mascara";
+    private static final ProductCategory SAMPLE_CATEGORY = ProductCategory.BEAUTY;
+    private static final Double SAMPLE_PRICE = 9.99;
+    private static final Double SAMPLE_DISCOUNT = 10.0;
+    private static final Double SAMPLE_RATING = 4.5;
+    private static final Integer SAMPLE_STOCK = 50;
+    private static final String SAMPLE_BRAND = "Essence";
+    private static final String SAMPLE_THUMBNAIL = "https://example.com/thumb.jpg";
+    private static final List<String> SAMPLE_IMAGES = List.of("https://example.com/img1.jpg");
+    private static final String UPSTREAM_ERROR_MSG = "Upstream server returned error 502";
+    private static final String UPSTREAM_TIMEOUT_MSG = "Upstream service timed out";
+    private static final String UNEXPECTED_SECRET_ERROR = "Secret database connection failed: credentials leak";
+
+    @Mock
+    private GetProductsUseCase getProductsUseCase;
+
+    @Mock
+    private GetProductByIdUseCase getProductByIdUseCase;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        ProductController controller = new ProductController(getProductsUseCase, getProductByIdUseCase);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
+
+    private Product createSampleProduct(Long id) {
+        return new Product(
+                id,
+                SAMPLE_TITLE,
+                SAMPLE_DESCRIPTION,
+                SAMPLE_CATEGORY,
+                SAMPLE_PRICE,
+                SAMPLE_DISCOUNT,
+                SAMPLE_RATING,
+                SAMPLE_STOCK,
+                SAMPLE_BRAND,
+                SAMPLE_THUMBNAIL,
+                SAMPLE_IMAGES
+        );
+    }
+
+    @Test
+    @DisplayName("GET /api/products should return 200 with list of products")
+    void getAllProducts_shouldReturn200_whenProductsExist() throws Exception {
+        // Arrange
+        Product product = createSampleProduct(EXISTING_ID);
+        when(getProductsUseCase.execute()).thenReturn(List.of(product));
+
+        // Act & Assert
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(1)))
+                .andExpect(jsonPath("$[0].title", is(SAMPLE_TITLE)))
+                .andExpect(jsonPath("$[0].category", is("beauty")))
+                .andExpect(jsonPath("$[0].price", is(SAMPLE_PRICE)));
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{id} should return 200 with product when found")
+    void getProductById_shouldReturn200_whenProductExists() throws Exception {
+        // Arrange
+        Product product = createSampleProduct(EXISTING_ID);
+        when(getProductByIdUseCase.execute(EXISTING_ID)).thenReturn(Optional.of(product));
+
+        // Act & Assert
+        mockMvc.perform(get(BY_ID_URL, EXISTING_ID).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is(SAMPLE_TITLE)))
+                .andExpect(jsonPath("$.category", is("beauty")));
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{id} should return 404 ProblemDetail when product is not found")
+    void getProductById_shouldReturn404_whenProductNotFound() throws Exception {
+        // Arrange
+        when(getProductByIdUseCase.execute(NON_EXISTING_ID)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get(BY_ID_URL, NON_EXISTING_ID).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.title", is("Resource Not Found")))
+                .andExpect(jsonPath("$.detail", containsString(String.valueOf(NON_EXISTING_ID))));
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{id} should return 400 ProblemDetail when id is non-numeric")
+    void getProductById_shouldReturn400_whenIdIsNotNumeric() throws Exception {
+        // Arrange & Act & Assert
+        mockMvc.perform(get(BY_ID_URL, NON_NUMERIC_ID).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)))
+                .andExpect(jsonPath("$.title", is("Bad Request")));
+    }
+
+    @Test
+    @DisplayName("GET /api/products should return 502 ProblemDetail when upstream service fails")
+    void getAllProducts_shouldReturn502_whenUpstreamFails() throws Exception {
+        // Arrange
+        when(getProductsUseCase.execute()).thenThrow(new ExternalServiceException(UPSTREAM_ERROR_MSG));
+
+        // Act & Assert
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.status", is(502)))
+                .andExpect(jsonPath("$.title", is("Bad Gateway")))
+                .andExpect(jsonPath("$.detail", is(UPSTREAM_ERROR_MSG)));
+    }
+
+    @Test
+    @DisplayName("GET /api/products should return 504 ProblemDetail when upstream service times out")
+    void getAllProducts_shouldReturn504_whenUpstreamTimesOut() throws Exception {
+        // Arrange
+        when(getProductsUseCase.execute()).thenThrow(new ExternalServiceTimeoutException(UPSTREAM_TIMEOUT_MSG));
+
+        // Act & Assert
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isGatewayTimeout())
+                .andExpect(jsonPath("$.status", is(504)))
+                .andExpect(jsonPath("$.title", is("Gateway Timeout")))
+                .andExpect(jsonPath("$.detail", is(UPSTREAM_TIMEOUT_MSG)));
+    }
+
+    @Test
+    @DisplayName("GET /api/products should return 500 ProblemDetail without exposing internal secrets on unexpected error")
+    void getAllProducts_shouldReturn500_whenUnexpectedExceptionOccurs() throws Exception {
+        // Arrange
+        when(getProductsUseCase.execute()).thenThrow(new RuntimeException(UNEXPECTED_SECRET_ERROR));
+
+        // Act & Assert
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status", is(500)))
+                .andExpect(jsonPath("$.title", is("Internal Server Error")))
+                .andExpect(jsonPath("$.detail", is("An unexpected internal server error occurred")))
+                .andExpect(jsonPath("$.detail", not(containsString(UNEXPECTED_SECRET_ERROR))));
+    }
+}

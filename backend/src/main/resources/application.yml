@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+dummyjson:
+  base-url: https://dummyjson.com
+  connect-timeout: 2s
+  read-timeout: 5s
