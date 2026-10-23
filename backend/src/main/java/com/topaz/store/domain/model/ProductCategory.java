@@ -41,9 +41,9 @@ public enum ProductCategory {
         if (value == null || value.isBlank()) {
             return OTHER;
         }
+        String normalized = value.trim();
         for (ProductCategory category : values()) {
-            if (category.value.equalsIgnoreCase(value.trim())
-                    || category.name().equalsIgnoreCase(value.trim().replace('-', '_'))) {
+            if (category.value.equalsIgnoreCase(normalized)) {
                 return category;
             }
         }
