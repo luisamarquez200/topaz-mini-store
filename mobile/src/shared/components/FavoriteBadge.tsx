@@ -2,13 +2,13 @@ import React from 'react';
 import {
   Pressable,
   StyleProp,
-  StyleSheet,
   View,
   ViewStyle,
 } from 'react-native';
-import { COLORS } from '../../core/theme/colors';
-import { RADIUS, SPACING } from '../../core/theme/spacing';
-import { Typography } from './Typography';
+import { COLORS } from '@/core/theme/colors';
+import { RADIUS, SPACING } from '@/core/theme/spacing';
+import { STRINGS } from '@/core/theme/strings';
+import { Typography } from '@/shared/components/Typography';
 
 export interface FavoriteBadgeProps {
   readonly isFavorite: boolean;
@@ -49,9 +49,18 @@ export const FavoriteBadge: React.FC<FavoriteBadgeProps> = ({
     return (
       <Pressable
         onPress={onPress}
-        hitSlop={{ top: SPACING.sm, bottom: SPACING.sm, left: SPACING.sm, right: SPACING.sm }}
+        hitSlop={{
+          top: SPACING.sm,
+          bottom: SPACING.sm,
+          left: SPACING.sm,
+          right: SPACING.sm,
+        }}
         accessibilityRole="button"
-        accessibilityLabel={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+        accessibilityLabel={
+          isFavorite
+            ? STRINGS.common.removeFavoriteA11y
+            : STRINGS.common.addFavoriteA11y
+        }
       >
         {content}
       </Pressable>

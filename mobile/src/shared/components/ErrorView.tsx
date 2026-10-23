@@ -1,9 +1,10 @@
 import React from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { COLORS } from '../../core/theme/colors';
-import { RADIUS, SPACING } from '../../core/theme/spacing';
-import { Button } from './Button';
-import { Typography } from './Typography';
+import { COLORS } from '@/core/theme/colors';
+import { RADIUS, SPACING } from '@/core/theme/spacing';
+import { STRINGS } from '@/core/theme/strings';
+import { Button } from '@/shared/components/Button';
+import { Typography } from '@/shared/components/Typography';
 
 export interface ErrorViewProps {
   readonly title?: string;
@@ -14,10 +15,10 @@ export interface ErrorViewProps {
 }
 
 export const ErrorView: React.FC<ErrorViewProps> = ({
-  title = 'Ha ocurrido un problema',
+  title = STRINGS.common.defaultErrorTitle,
   message,
   onRetry,
-  retryTitle = 'Reintentar',
+  retryTitle = STRINGS.common.retry,
   style,
 }) => {
   return (
@@ -59,10 +60,9 @@ export const ErrorView: React.FC<ErrorViewProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    width: '100%',
     alignItems: 'center',
-    padding: SPACING.xl,
+    padding: SPACING.md,
   },
   card: {
     backgroundColor: COLORS.surface,

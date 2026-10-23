@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, TextProps, TextStyle } from 'react-native';
-import { COLORS } from '../../core/theme/colors';
-import { TYPOGRAPHY_VARIANTS } from '../../core/theme/typography';
+import { Text, TextProps, TextStyle } from 'react-native';
+import { COLORS } from '@/core/theme/colors';
+import { TYPOGRAPHY_VARIANTS } from '@/core/theme/typography';
 
 export type TypographyVariant =
   | 'display'

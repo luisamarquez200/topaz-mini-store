@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
-import { ENV } from '../config/env';
+import { ENV } from '@/core/config/env';
+import { STRINGS } from '@/core/theme/strings';
 
 export interface ApiError {
   readonly status: number;
@@ -39,7 +40,7 @@ export const normalizeError = (error: unknown): ApiError => {
 
   if (axios.isAxiosError(error)) {
     const status = error.response?.status ?? (error.code === 'ECONNABORTED' ? 504 : 0);
-    const fallback = error.message || 'An error occurred while connecting to the server';
+    const fallback = error.message || STRINGS.common.networkError;
     const message = extractErrorMessage(error.response?.data, fallback);
 
     return {
@@ -57,7 +58,7 @@ export const normalizeError = (error: unknown): ApiError => {
 
   return {
     status: 0,
-    message: 'Unknown error occurred',
+    message: STRINGS.common.unknownError,
   };
 };
 

@@ -1,61 +1,51 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { COLORS } from '../core/theme/colors';
-import { SPACING } from '../core/theme/spacing';
-import { Typography } from '../shared/components/Typography';
-import { TabNavigator } from './TabNavigator';
-import { RootStackParamList } from './types';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
+import { COLORS } from '@/core/theme/colors';
+import { STRINGS } from '@/core/theme/strings';
+import { TabNavigator } from '@/navigation/TabNavigator';
+import { RootStackParamList } from '@/navigation/types';
+import { ProductDetailView } from '@/features/products/presentation/views/ProductDetailView';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const ProductDetailPlaceholder: React.FC = () => {
-  return (
-    <View style={styles.detailScreen}>
-      <Typography variant="heading" color={COLORS.primary}>
-        Detalle del Producto
-      </Typography>
-    </View>
-  );
+const ROOT_NAVIGATOR_SCREEN_OPTIONS: NativeStackNavigationOptions = {
+  headerStyle: {
+    backgroundColor: COLORS.surface,
+  },
+  headerTitleStyle: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  headerTintColor: COLORS.accent,
+  contentStyle: {
+    backgroundColor: COLORS.background,
+  },
+};
+
+const MAIN_TABS_SCREEN_OPTIONS: NativeStackNavigationOptions = {
+  headerShown: false,
+};
+
+const DETAIL_SCREEN_OPTIONS: NativeStackNavigationOptions = {
+  title: STRINGS.nav.detailTitle,
 };
 
 export const RootNavigator: React.FC = () => {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: COLORS.surface,
-        },
-        headerTitleStyle: {
-          color: COLORS.primary,
-          fontWeight: '700',
-        },
-        headerTintColor: COLORS.accent,
-        contentStyle: {
-          backgroundColor: COLORS.background,
-        },
-      }}
-    >
+    <Stack.Navigator screenOptions={ROOT_NAVIGATOR_SCREEN_OPTIONS}>
       <Stack.Screen
         name="MainTabs"
         component={TabNavigator}
-        options={{ headerShown: false }}
+        options={MAIN_TABS_SCREEN_OPTIONS}
       />
       <Stack.Screen
         name="ProductDetail"
-        component={ProductDetailPlaceholder}
-        options={{ title: 'Detalle' }}
+        component={ProductDetailView}
+        options={DETAIL_SCREEN_OPTIONS}
       />
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  detailScreen: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.xl,
-  },
-});

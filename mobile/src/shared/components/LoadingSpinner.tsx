@@ -6,9 +6,9 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { COLORS } from '../../core/theme/colors';
-import { SPACING } from '../../core/theme/spacing';
-import { Typography } from './Typography';
+import { COLORS } from '@/core/theme/colors';
+import { SPACING } from '@/core/theme/spacing';
+import { Typography } from '@/shared/components/Typography';
 
 export interface LoadingSpinnerProps {
   readonly message?: string;

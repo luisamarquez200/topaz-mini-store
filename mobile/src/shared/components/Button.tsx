@@ -7,9 +7,9 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { COLORS } from '../../core/theme/colors';
-import { RADIUS, SPACING } from '../../core/theme/spacing';
-import { Typography } from './Typography';
+import { COLORS } from '@/core/theme/colors';
+import { RADIUS, SPACING } from '@/core/theme/spacing';
+import { Typography } from '@/shared/components/Typography';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 

@@ -1,12 +1,48 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { COLORS } from '../core/theme/colors';
-import { SPACING } from '../core/theme/spacing';
-import { Typography } from '../shared/components/Typography';
-import { MainTabParamList } from './types';
+import {
+  BottomTabNavigationOptions,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
+import { COLORS } from '@/core/theme/colors';
+import { SPACING } from '@/core/theme/spacing';
+import { STRINGS } from '@/core/theme/strings';
+import { Typography } from '@/shared/components/Typography';
+import { MainTabParamList } from '@/navigation/types';
+import { ProductListView } from '@/features/products/presentation/views/ProductListView';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const TAB_NAVIGATOR_SCREEN_OPTIONS: BottomTabNavigationOptions = {
+  headerStyle: {
+    backgroundColor: COLORS.surface,
+  },
+  headerTitleStyle: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  tabBarStyle: {
+    backgroundColor: COLORS.surface,
+    borderTopColor: COLORS.border,
+  },
+  tabBarActiveTintColor: COLORS.accent,
+  tabBarInactiveTintColor: COLORS.textMuted,
+};
+
+const PRODUCTS_TAB_OPTIONS: BottomTabNavigationOptions = {
+  title: STRINGS.nav.productsTitle,
+  tabBarLabel: STRINGS.nav.productsTab,
+};
+
+const FAVORITES_TAB_OPTIONS: BottomTabNavigationOptions = {
+  title: STRINGS.nav.favoritesTitle,
+  tabBarLabel: STRINGS.nav.favoritesTab,
+};
+
+const SETTINGS_TAB_OPTIONS: BottomTabNavigationOptions = {
+  title: STRINGS.nav.settingsTitle,
+  tabBarLabel: STRINGS.nav.settingsTab,
+};
 
 const PlaceholderView: React.FC<{ readonly title: string; readonly subtitle: string }> = ({
   title,
@@ -29,69 +65,37 @@ const PlaceholderView: React.FC<{ readonly title: string; readonly subtitle: str
   );
 };
 
-export const ProductsPlaceholder: React.FC = () => (
-  <PlaceholderView
-    title="Catálogo"
-    subtitle="Productos disponibles en Topaz Store"
-  />
-);
-
 export const FavoritesPlaceholder: React.FC = () => (
   <PlaceholderView
-    title="Favoritos"
-    subtitle="Tus productos guardados aparecerán aquí"
+    title={STRINGS.nav.favoritesTitle}
+    subtitle={STRINGS.products.placeholderFavoritesSubtitle}
   />
 );
 
 export const SettingsPlaceholder: React.FC = () => (
   <PlaceholderView
-    title="Ajustes"
-    subtitle="Configuración general de la aplicación"
+    title={STRINGS.nav.settingsTitle}
+    subtitle={STRINGS.products.placeholderSettingsSubtitle}
   />
 );
 
 export const TabNavigator: React.FC = () => {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: COLORS.surface,
-        },
-        headerTitleStyle: {
-          color: COLORS.primary,
-          fontWeight: '700',
-        },
-        tabBarStyle: {
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.border,
-        },
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.textMuted,
-      }}
-    >
+    <Tab.Navigator screenOptions={TAB_NAVIGATOR_SCREEN_OPTIONS}>
       <Tab.Screen
         name="ProductsTab"
-        component={ProductsPlaceholder}
-        options={{
-          title: 'Productos',
-          tabBarLabel: 'Productos',
-        }}
+        component={ProductListView}
+        options={PRODUCTS_TAB_OPTIONS}
       />
       <Tab.Screen
         name="FavoritesTab"
         component={FavoritesPlaceholder}
-        options={{
-          title: 'Favoritos',
-          tabBarLabel: 'Favoritos',
-        }}
+        options={FAVORITES_TAB_OPTIONS}
       />
       <Tab.Screen
         name="SettingsTab"
         component={SettingsPlaceholder}
-        options={{
-          title: 'Ajustes',
-          tabBarLabel: 'Ajustes',
-        }}
+        options={SETTINGS_TAB_OPTIONS}
       />
     </Tab.Navigator>
   );
@@ -100,7 +104,6 @@ export const TabNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.xl,
