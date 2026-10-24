@@ -1,12 +1,21 @@
-import { createMMKV, MMKV } from 'react-native-mmkv';
 import { StateStorage } from 'zustand/middleware';
 
 const STORAGE_ID = 'topaz-store-storage';
 
-let mmkvInstance: MMKV | null = null;
+interface MMKVLike {
+  getString: (key: string) => string | undefined;
+  set: (key: string, value: string) => void;
+  remove: (key: string) => void;
+}
+
+let mmkvInstance: MMKVLike | null = null;
 
 try {
-  mmkvInstance = createMMKV({ id: STORAGE_ID });
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mmkvModule = require('react-native-mmkv');
+  if (typeof mmkvModule?.createMMKV === 'function') {
+    mmkvInstance = mmkvModule.createMMKV({ id: STORAGE_ID });
+  }
 } catch {
   // Graceful fallback for non-native test environments (e.g. Jest / Node)
   mmkvInstance = null;

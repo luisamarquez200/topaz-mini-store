@@ -3,6 +3,7 @@ import { STRINGS } from '@/core/theme/strings';
 import { Product } from '@/features/products/domain/types/Product';
 import { GetProductsUseCase } from '@/features/products/application/use-case/GetProductsUseCase';
 import { container } from '@/di/container';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export interface UseProductListState {
   readonly data: readonly Product[];
@@ -28,18 +29,13 @@ export const useProductList = (
       const products = await useCase.execute();
       if (isMountedRef.current) {
         setData(products);
-        setIsLoading(false);
       }
     } catch (err: unknown) {
       if (isMountedRef.current) {
-        const message =
-          typeof err === 'object' &&
-          err !== null &&
-          'message' in err &&
-          typeof err.message === 'string'
-            ? err.message
-            : STRINGS.products.loadError;
-        setError(message);
+        setError(getErrorMessage(err, STRINGS.products.loadError));
+      }
+    } finally {
+      if (isMountedRef.current) {
         setIsLoading(false);
       }
     }

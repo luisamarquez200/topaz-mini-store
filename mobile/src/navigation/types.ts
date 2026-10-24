@@ -3,7 +3,6 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 export type MainTabParamList = {
   ProductsTab: undefined;
   FavoritesTab: undefined;
-  SettingsTab: undefined;
 };
 
 export type RootStackParamList = {

@@ -1,19 +1,21 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/core/theme/colors';
 import { SPACING } from '@/core/theme/spacing';
+import { SHADOWS } from '@/core/theme/shadows';
 import { STRINGS } from '@/core/theme/strings';
-import { Typography } from '@/shared/components/Typography';
 import { MainTabParamList } from '@/navigation/types';
 import { ProductListView } from '@/features/products/presentation/views/ProductListView';
+import { FavoritesListView } from '@/features/favorites/presentation/views/FavoritesListView';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const TAB_NAVIGATOR_SCREEN_OPTIONS: BottomTabNavigationOptions = {
+const BASE_TAB_OPTIONS: BottomTabNavigationOptions = {
   headerStyle: {
     backgroundColor: COLORS.surface,
   },
@@ -21,94 +23,65 @@ const TAB_NAVIGATOR_SCREEN_OPTIONS: BottomTabNavigationOptions = {
     color: COLORS.primary,
     fontWeight: '700',
   },
-  tabBarStyle: {
-    backgroundColor: COLORS.surface,
-    borderTopColor: COLORS.border,
-  },
   tabBarActiveTintColor: COLORS.accent,
   tabBarInactiveTintColor: COLORS.textMuted,
 };
 
-const PRODUCTS_TAB_OPTIONS: BottomTabNavigationOptions = {
+const getProductsTabOptions = (): BottomTabNavigationOptions => ({
   title: STRINGS.nav.productsTitle,
   tabBarLabel: STRINGS.nav.productsTab,
-};
+  tabBarIcon: ({ color, size, focused }) => (
+    <Ionicons
+      name={focused ? 'grid' : 'grid-outline'}
+      size={size}
+      color={color}
+    />
+  ),
+});
 
-const FAVORITES_TAB_OPTIONS: BottomTabNavigationOptions = {
+const getFavoritesTabOptions = (): BottomTabNavigationOptions => ({
   title: STRINGS.nav.favoritesTitle,
   tabBarLabel: STRINGS.nav.favoritesTab,
-};
-
-const SETTINGS_TAB_OPTIONS: BottomTabNavigationOptions = {
-  title: STRINGS.nav.settingsTitle,
-  tabBarLabel: STRINGS.nav.settingsTab,
-};
-
-const PlaceholderView: React.FC<{ readonly title: string; readonly subtitle: string }> = ({
-  title,
-  subtitle,
-}) => {
-  return (
-    <View style={styles.screen}>
-      <Typography variant="heading" color={COLORS.primary} align="center">
-        {title}
-      </Typography>
-      <Typography
-        variant="body"
-        color={COLORS.textSecondary}
-        align="center"
-        style={styles.subtitle}
-      >
-        {subtitle}
-      </Typography>
-    </View>
-  );
-};
-
-export const FavoritesPlaceholder: React.FC = () => (
-  <PlaceholderView
-    title={STRINGS.nav.favoritesTitle}
-    subtitle={STRINGS.products.placeholderFavoritesSubtitle}
-  />
-);
-
-export const SettingsPlaceholder: React.FC = () => (
-  <PlaceholderView
-    title={STRINGS.nav.settingsTitle}
-    subtitle={STRINGS.products.placeholderSettingsSubtitle}
-  />
-);
+  tabBarIcon: ({ color, size, focused }) => (
+    <Ionicons
+      name={focused ? 'heart' : 'heart-outline'}
+      size={size}
+      color={color}
+    />
+  ),
+});
 
 export const TabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, SPACING.xs);
+
+  const screenOptions: BottomTabNavigationOptions = {
+    ...BASE_TAB_OPTIONS,
+    tabBarStyle: {
+      backgroundColor: COLORS.surface,
+      borderTopColor: COLORS.border,
+      height: 56 + bottomInset,
+      paddingBottom: bottomInset,
+      paddingTop: SPACING.xs,
+      ...SHADOWS.md,
+    },
+  };
+
   return (
-    <Tab.Navigator screenOptions={TAB_NAVIGATOR_SCREEN_OPTIONS}>
+    <Tab.Navigator
+      initialRouteName="ProductsTab"
+      screenOptions={screenOptions}
+    >
       <Tab.Screen
         name="ProductsTab"
         component={ProductListView}
-        options={PRODUCTS_TAB_OPTIONS}
+        options={getProductsTabOptions}
       />
       <Tab.Screen
         name="FavoritesTab"
-        component={FavoritesPlaceholder}
-        options={FAVORITES_TAB_OPTIONS}
-      />
-      <Tab.Screen
-        name="SettingsTab"
-        component={SettingsPlaceholder}
-        options={SETTINGS_TAB_OPTIONS}
+        component={FavoritesListView}
+        options={getFavoritesTabOptions}
       />
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.xl,
-  },
-  subtitle: {
-    marginTop: SPACING.sm,
-  },
-});

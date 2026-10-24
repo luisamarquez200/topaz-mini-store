@@ -1,19 +1,20 @@
 import React, { useCallback, useState } from 'react';
 import {
   FlatList,
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
 
-const CAROUSEL_HEIGHT = 300;
+const CAROUSEL_HEIGHT = 320;
 const DOT_SIZE = 8;
-const ACTIVE_DOT_WIDTH = 20;
+const ACTIVE_DOT_WIDTH = 24;
+const IMAGE_TRANSITION_MS = 200;
 
 export interface ProductCarouselProps {
   readonly images: readonly string[];
@@ -46,7 +47,8 @@ export const ProductCarousel: React.FC<ProductCarouselProps> = ({ images }) => {
           <Image
             source={{ uri: item }}
             style={styles.image}
-            resizeMode="contain"
+            contentFit="contain"
+            transition={IMAGE_TRANSITION_MS}
           />
         </View>
       );
@@ -98,12 +100,15 @@ const styles = StyleSheet.create({
   container: {
     height: CAROUSEL_HEIGHT,
     backgroundColor: COLORS.surface,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
+    overflow: 'hidden',
   },
   imageWrapper: {
     height: CAROUSEL_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.lg,
+    padding: SPACING.xl,
   },
   image: {
     width: '100%',
@@ -114,6 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.surfaceMuted,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
   },
   imagePlaceholder: {
     width: 120,

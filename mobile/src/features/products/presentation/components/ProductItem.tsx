@@ -1,18 +1,20 @@
 import React from 'react';
 import {
-  Image,
   Pressable,
   StyleSheet,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
+import { SHADOWS } from '@/core/theme/shadows';
 import { STRINGS } from '@/core/theme/strings';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 
-const THUMBNAIL_SIZE = 84;
+const THUMBNAIL_SIZE = 88;
+const IMAGE_TRANSITION_MS = 200;
 
 export interface ProductItemProps {
   readonly product: Product;
@@ -36,20 +38,34 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
         accessibilityRole="button"
         accessibilityLabel={product.title}
       >
-        <Image
-          source={{ uri: product.thumbnail }}
-          style={styles.thumbnail}
-          resizeMode="cover"
-          accessibilityLabel={`${product.title}${STRINGS.products.thumbnailSuffix}`}
-        />
+        <View style={styles.imageWrapper}>
+          <Image
+            source={{ uri: product.thumbnail }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            transition={IMAGE_TRANSITION_MS}
+            accessibilityLabel={`${product.title}${STRINGS.products.thumbnailSuffix}`}
+          />
+          {product.discountPercentage > 0 && (
+            <View style={styles.discountBadge}>
+              <Typography variant="caption" color={COLORS.error}>
+                {`-${Math.round(product.discountPercentage)}%`}
+              </Typography>
+            </View>
+          )}
+        </View>
+
         <View style={styles.info}>
-          <Typography
-            variant="caption"
-            color={COLORS.accent}
-            numberOfLines={1}
-          >
-            {product.category.toUpperCase()}
-          </Typography>
+          <View style={styles.categoryRow}>
+            <Typography
+              variant="caption"
+              color={COLORS.accent}
+              numberOfLines={1}
+            >
+              {product.category.toUpperCase()}
+            </Typography>
+          </View>
+
           <Typography
             variant="subtitle"
             color={COLORS.text}
@@ -58,6 +74,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
           >
             {product.title}
           </Typography>
+
           <View style={styles.footer}>
             <Typography variant="title" color={COLORS.primary}>
               {formatPrice(product.price)}
@@ -69,6 +86,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
             </View>
           </View>
         </View>
+
         {rightAction !== undefined && (
           <View style={styles.actionContainer}>{rightAction}</View>
         )}
@@ -89,10 +107,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'center',
+    ...SHADOWS.sm,
   },
   pressed: {
-    opacity: 0.9,
-    backgroundColor: COLORS.surfaceMuted,
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
+  },
+  imageWrapper: {
+    position: 'relative',
   },
   thumbnail: {
     width: THUMBNAIL_SIZE,
@@ -100,10 +122,23 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.surfaceMuted,
   },
+  discountBadge: {
+    position: 'absolute',
+    top: SPACING.xs,
+    left: SPACING.xs,
+    backgroundColor: COLORS.errorLight,
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: SPACING.xxs,
+    borderRadius: RADIUS.xs,
+  },
   info: {
     flex: 1,
     marginLeft: SPACING.md,
     justifyContent: 'center',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
     marginVertical: SPACING.xxs,

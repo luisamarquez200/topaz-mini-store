@@ -2,20 +2,19 @@ import axios, { AxiosInstance } from 'axios';
 import { ENV } from '@/core/config/env';
 import { STRINGS } from '@/core/theme/strings';
 
-export interface ApiError {
+export class ApiError extends Error {
   readonly status: number;
-  readonly message: string;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
-export const isApiError = (error: unknown): error is ApiError => {
-  if (!isRecord(error)) {
-    return false;
-  }
-  return typeof error.status === 'number' && typeof error.message === 'string';
 };
 
 const extractErrorMessage = (data: unknown, fallbackMessage: string): string => {
@@ -34,7 +33,7 @@ const extractErrorMessage = (data: unknown, fallbackMessage: string): string => 
 };
 
 export const normalizeError = (error: unknown): ApiError => {
-  if (isApiError(error)) {
+  if (error instanceof ApiError) {
     return error;
   }
 
@@ -43,23 +42,14 @@ export const normalizeError = (error: unknown): ApiError => {
     const fallback = error.message || STRINGS.common.networkError;
     const message = extractErrorMessage(error.response?.data, fallback);
 
-    return {
-      status,
-      message,
-    };
+    return new ApiError(status, message);
   }
 
   if (error instanceof Error) {
-    return {
-      status: 0,
-      message: error.message,
-    };
+    return new ApiError(0, error.message);
   }
 
-  return {
-    status: 0,
-    message: STRINGS.common.unknownError,
-  };
+  return new ApiError(0, STRINGS.common.unknownError);
 };
 
 export const apiClient: AxiosInstance = axios.create({

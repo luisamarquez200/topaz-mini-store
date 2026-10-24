@@ -18,7 +18,11 @@ export const COLORS = Object.freeze({
   borderLight: '#F1F5F9',
   success: '#10B981',
   successLight: '#ECFDF5',
+  warning: '#F59E0B',
+  warningLight: '#FFFBEB',
   error: '#EF4444',
   errorLight: '#FEF2F2',
   overlay: 'rgba(15, 23, 42, 0.4)',
+  skeleton: '#E2E8F0',
+  skeletonHighlight: '#F8FAFC',
 });

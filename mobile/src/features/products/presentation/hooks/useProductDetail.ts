@@ -3,6 +3,7 @@ import { STRINGS } from '@/core/theme/strings';
 import { Product } from '@/features/products/domain/types/Product';
 import { GetProductByIdUseCase } from '@/features/products/application/use-case/GetProductByIdUseCase';
 import { container } from '@/di/container';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export interface UseProductDetailState {
   readonly data: Product | null;
@@ -20,31 +21,28 @@ export const useProductDetail = (
   const [error, setError] = useState<string | null>(null);
 
   const isMountedRef = useRef<boolean>(true);
+  const activeIdRef = useRef<number>(productId);
 
   const fetchProduct = useCallback(async (): Promise<void> => {
+    activeIdRef.current = productId;
     setIsLoading(true);
     setError(null);
 
     try {
       const product = await useCase.execute(productId);
-      if (isMountedRef.current) {
+      if (isMountedRef.current && activeIdRef.current === productId) {
         if (product === null) {
           setError(STRINGS.products.notFound);
         } else {
           setData(product);
         }
-        setIsLoading(false);
       }
     } catch (err: unknown) {
-      if (isMountedRef.current) {
-        const message =
-          typeof err === 'object' &&
-          err !== null &&
-          'message' in err &&
-          typeof err.message === 'string'
-            ? err.message
-            : STRINGS.products.detailLoadError;
-        setError(message);
+      if (isMountedRef.current && activeIdRef.current === productId) {
+        setError(getErrorMessage(err, STRINGS.products.detailLoadError));
+      }
+    } finally {
+      if (isMountedRef.current && activeIdRef.current === productId) {
         setIsLoading(false);
       }
     }
@@ -52,12 +50,13 @@ export const useProductDetail = (
 
   useEffect(() => {
     isMountedRef.current = true;
+    activeIdRef.current = productId;
     void fetchProduct();
 
     return () => {
       isMountedRef.current = false;
     };
-  }, [fetchProduct]);
+  }, [fetchProduct, productId]);
 
   return {
     data,

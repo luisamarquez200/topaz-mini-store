@@ -1,7 +1,7 @@
 package com.topaz.store.infrastructure.adapter.in.rest;
 
+import com.topaz.store.ProductFixtures;
 import com.topaz.store.domain.model.Product;
-import com.topaz.store.domain.model.ProductCategory;
 import com.topaz.store.domain.port.in.GetProductByIdUseCase;
 import com.topaz.store.domain.port.in.GetProductsUseCase;
 import com.topaz.store.infrastructure.exception.ExternalServiceException;
@@ -36,18 +36,8 @@ class ProductControllerTest {
     private static final String BASE_URL = "/api/products";
     private static final String BY_ID_URL = "/api/products/{id}";
     private static final String NON_NUMERIC_ID = "invalid-id";
-    private static final Long EXISTING_ID = 1L;
+    private static final Long EXISTING_ID = ProductFixtures.DEFAULT_ID;
     private static final Long NON_EXISTING_ID = 999L;
-    private static final String SAMPLE_TITLE = "Essence Mascara";
-    private static final String SAMPLE_DESCRIPTION = "High volume mascara";
-    private static final ProductCategory SAMPLE_CATEGORY = ProductCategory.BEAUTY;
-    private static final Double SAMPLE_PRICE = 9.99;
-    private static final Double SAMPLE_DISCOUNT = 10.0;
-    private static final Double SAMPLE_RATING = 4.5;
-    private static final Integer SAMPLE_STOCK = 50;
-    private static final String SAMPLE_BRAND = "Essence";
-    private static final String SAMPLE_THUMBNAIL = "https://example.com/thumb.jpg";
-    private static final List<String> SAMPLE_IMAGES = List.of("https://example.com/img1.jpg");
     private static final String UPSTREAM_ERROR_MSG = "Upstream server returned error 502";
     private static final String UPSTREAM_TIMEOUT_MSG = "Upstream service timed out";
     private static final String UNEXPECTED_SECRET_ERROR = "Secret database connection failed: credentials leak";
@@ -68,27 +58,11 @@ class ProductControllerTest {
                 .build();
     }
 
-    private Product createSampleProduct(Long id) {
-        return new Product(
-                id,
-                SAMPLE_TITLE,
-                SAMPLE_DESCRIPTION,
-                SAMPLE_CATEGORY,
-                SAMPLE_PRICE,
-                SAMPLE_DISCOUNT,
-                SAMPLE_RATING,
-                SAMPLE_STOCK,
-                SAMPLE_BRAND,
-                SAMPLE_THUMBNAIL,
-                SAMPLE_IMAGES
-        );
-    }
-
     @Test
     @DisplayName("GET /api/products should return 200 with list of products")
     void getAllProducts_shouldReturn200_whenProductsExist() throws Exception {
         // Arrange
-        Product product = createSampleProduct(EXISTING_ID);
+        Product product = ProductFixtures.aProduct();
         when(getProductsUseCase.execute()).thenReturn(List.of(product));
 
         // Act & Assert
@@ -97,16 +71,16 @@ class ProductControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[0].title", is(SAMPLE_TITLE)))
-                .andExpect(jsonPath("$[0].category", is("beauty")))
-                .andExpect(jsonPath("$[0].price", is(SAMPLE_PRICE)));
+                .andExpect(jsonPath("$[0].title", is(ProductFixtures.DEFAULT_TITLE)))
+                .andExpect(jsonPath("$[0].category", is(ProductFixtures.DEFAULT_CATEGORY_STRING)))
+                .andExpect(jsonPath("$[0].price", is(ProductFixtures.DEFAULT_PRICE)));
     }
 
     @Test
     @DisplayName("GET /api/products/{id} should return 200 with product when found")
     void getProductById_shouldReturn200_whenProductExists() throws Exception {
         // Arrange
-        Product product = createSampleProduct(EXISTING_ID);
+        Product product = ProductFixtures.aProduct();
         when(getProductByIdUseCase.execute(EXISTING_ID)).thenReturn(Optional.of(product));
 
         // Act & Assert
@@ -114,8 +88,8 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.title", is(SAMPLE_TITLE)))
-                .andExpect(jsonPath("$.category", is("beauty")));
+                .andExpect(jsonPath("$.title", is(ProductFixtures.DEFAULT_TITLE)))
+                .andExpect(jsonPath("$.category", is(ProductFixtures.DEFAULT_CATEGORY_STRING)));
     }
 
     @Test
