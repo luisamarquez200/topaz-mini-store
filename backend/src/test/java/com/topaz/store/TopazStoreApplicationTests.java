@@ -38,7 +38,6 @@ class TopazStoreApplicationTests {
     @DisplayName("Context should load and BeanConfiguration should wire hexagonal beans properly")
     void contextLoads_andWiresHexagonalArchitecture() {
         // Arrange
-        // Dependencies injected via @SpringBootTest
 
         // Act
         boolean contextLoaded = applicationContext != null;

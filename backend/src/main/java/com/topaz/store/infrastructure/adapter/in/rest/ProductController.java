@@ -4,6 +4,7 @@ import com.topaz.store.domain.port.in.GetProductByIdUseCase;
 import com.topaz.store.domain.port.in.GetProductsUseCase;
 import com.topaz.store.infrastructure.adapter.in.rest.dto.ProductResponseDto;
 import com.topaz.store.infrastructure.exception.ResourceNotFoundException;
+import jakarta.validation.constraints.Positive;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +37,7 @@ public class ProductController {
     }
 
     @GetMapping(BY_ID_PATH)
-    public ProductResponseDto getProductById(@PathVariable long id) {
+    public ProductResponseDto getProductById(@PathVariable @Positive long id) {
         return getProductByIdUseCase.execute(id)
                 .map(ProductResponseDto::fromDomain)
                 .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND_MSG + id));

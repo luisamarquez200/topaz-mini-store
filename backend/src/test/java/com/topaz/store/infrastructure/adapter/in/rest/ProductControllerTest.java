@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -38,6 +39,7 @@ class ProductControllerTest {
     private static final String NON_NUMERIC_ID = "invalid-id";
     private static final long EXISTING_ID = ProductFixtures.DEFAULT_ID;
     private static final long NON_EXISTING_ID = 999L;
+    private static final long NON_POSITIVE_ID = -5L;
     private static final String UPSTREAM_ERROR_MSG = "Upstream server returned error 502";
     private static final String UPSTREAM_TIMEOUT_MSG = "Upstream service timed out";
     private static final String UNEXPECTED_SECRET_ERROR = "Secret database connection failed: credentials leak";
@@ -73,7 +75,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$[0].id", is(1)))
                 .andExpect(jsonPath("$[0].title", is(ProductFixtures.DEFAULT_TITLE)))
                 .andExpect(jsonPath("$[0].category", is(ProductFixtures.DEFAULT_CATEGORY_STRING)))
-                .andExpect(jsonPath("$[0].price", is(ProductFixtures.DEFAULT_PRICE)));
+                .andExpect(jsonPath("$[0].price", is(ProductFixtures.DEFAULT_PRICE.doubleValue())));
     }
 
     @Test
@@ -114,6 +116,16 @@ class ProductControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status", is(400)))
                 .andExpect(jsonPath("$.title", is("Bad Request")));
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{id} should return 400 ProblemDetail when id is not positive")
+    void getProductById_shouldReturn400_whenIdIsNotPositive() throws Exception {
+        // Arrange & Act & Assert
+        mockMvc.perform(get(BY_ID_URL, NON_POSITIVE_ID).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)));
+        verifyNoInteractions(getProductByIdUseCase);
     }
 
     @Test

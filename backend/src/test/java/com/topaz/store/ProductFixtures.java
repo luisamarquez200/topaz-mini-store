@@ -4,6 +4,7 @@ import com.topaz.store.domain.model.Product;
 import com.topaz.store.domain.model.ProductCategory;
 import com.topaz.store.infrastructure.adapter.out.external.dto.DummyJsonProductDto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public final class ProductFixtures {
@@ -13,7 +14,7 @@ public final class ProductFixtures {
     public static final String DEFAULT_DESCRIPTION = "High volume mascara";
     public static final ProductCategory DEFAULT_CATEGORY = ProductCategory.BEAUTY;
     public static final String DEFAULT_CATEGORY_STRING = "beauty";
-    public static final Double DEFAULT_PRICE = 9.99;
+    public static final BigDecimal DEFAULT_PRICE = new BigDecimal("9.99");
     public static final Double DEFAULT_DISCOUNT = 10.0;
     public static final Double DEFAULT_RATING = 4.5;
     public static final Integer DEFAULT_STOCK = 50;
@@ -22,7 +23,6 @@ public final class ProductFixtures {
     public static final List<String> DEFAULT_IMAGES = List.of("https://example.com/img1.jpg");
 
     private ProductFixtures() {
-        // Prevent instantiation
     }
 
     public static Product aProduct() {

@@ -56,7 +56,6 @@ public class DummyJsonClient {
         });
     }
 
-    /** Único punto donde se traducen los errores de transporte. */
     private <T> T call(String operation, Supplier<T> action) {
         try {
             return action.get();

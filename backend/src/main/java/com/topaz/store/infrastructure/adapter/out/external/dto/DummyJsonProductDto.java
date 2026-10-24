@@ -2,6 +2,7 @@ package com.topaz.store.infrastructure.adapter.out.external.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -10,7 +11,7 @@ public record DummyJsonProductDto(
     String title,
     String description,
     String category,
-    Double price,
+    BigDecimal price,
     Double discountPercentage,
     Double rating,
     Integer stock,

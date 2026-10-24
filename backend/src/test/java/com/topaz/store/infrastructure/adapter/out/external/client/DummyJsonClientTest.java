@@ -97,7 +97,7 @@ class DummyJsonClientTest {
         assertThat(product.id()).isEqualTo(EXISTING_PRODUCT_ID);
         assertThat(product.title()).isEqualTo("Essence Mascara Lash Princess");
         assertThat(product.category()).isEqualTo("beauty");
-        assertThat(product.price()).isEqualTo(9.99);
+        assertThat(product.price()).isEqualByComparingTo("9.99");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.topaz.store.domain.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record Product(
@@ -7,7 +8,7 @@ public record Product(
     String title,
     String description,
     ProductCategory category,
-    Double price,
+    BigDecimal price,
     Double discountPercentage,
     Double rating,
     Integer stock,

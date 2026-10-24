@@ -1,9 +1,9 @@
 package com.topaz.store.infrastructure.adapter.out.external;
 
-import com.topaz.store.TopazStoreApplication;
 import com.topaz.store.domain.model.Product;
 import com.topaz.store.domain.port.out.ProductExternalPort;
 import com.topaz.store.infrastructure.adapter.out.external.client.DummyJsonClient;
+import com.topaz.store.infrastructure.config.CacheNames;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +23,7 @@ public class DummyJsonAdapter implements ProductExternalPort {
     }
 
     @Override
-    @Cacheable(TopazStoreApplication.CACHE_PRODUCTS)
+    @Cacheable(CacheNames.PRODUCTS)
     public List<Product> fetchAllProducts() {
         return dummyJsonClient.getAllProducts()
                 .stream()
@@ -32,7 +32,7 @@ public class DummyJsonAdapter implements ProductExternalPort {
     }
 
     @Override
-    @Cacheable(value = TopazStoreApplication.CACHE_PRODUCT_BY_ID, key = "#id")
+    @Cacheable(value = CacheNames.PRODUCT_BY_ID, key = "#id")
     public Optional<Product> fetchProductById(long id) {
         return dummyJsonClient.getProductById(id)
                 .map(productMapper::toDomain);

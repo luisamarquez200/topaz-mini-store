@@ -1,26 +1,42 @@
 server:
   port: 8080
+  shutdown: graceful
 
 spring:
+  application:
+    name: topaz-store-backend
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  threads:
+    virtual:
+      enabled: true
   cache:
     type: caffeine
     cache-names:
       - products
       - productById
     caffeine:
-      spec: maximumSize=500,expireAfterWrite=60s
+      spec: maximumSize=500,expireAfterWrite=60s,recordStats
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+topaz:
+  cors:
+    allowed-origins: "*"
 
 dummyjson:
   base-url: https://dummyjson.com
