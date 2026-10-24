@@ -17,6 +17,7 @@ import { STRINGS } from '@/core/theme/strings';
 import { FavoriteButton } from '@/shared/components/FavoriteButton';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
+import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 
 const PRODUCT_IMAGE_SIZE = 96;
@@ -90,7 +91,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
             color={COLORS.muted}
             numberOfLines={1}
           >
-            {product.category.toUpperCase()}
+            {formatCategoryLabel(product.category).toUpperCase()}
           </Typography>
 
           <Typography

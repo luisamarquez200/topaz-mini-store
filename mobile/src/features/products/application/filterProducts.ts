@@ -1,4 +1,5 @@
 import { Product } from '@/features/products/domain/types/Product';
+import { formatCategoryLabel } from '@/features/products/application/formatCategoryLabel';
 
 export enum SortOption {
   DEFAULT = 'DEFAULT',
@@ -46,11 +47,15 @@ export const filterProducts = (
       const brandNorm =
         product.brand !== null ? normalizeText(product.brand) : '';
       const catNorm = normalizeText(product.category);
+      const catTranslatedNorm = normalizeText(
+        formatCategoryLabel(product.category)
+      );
 
       const matches =
         titleNorm.includes(normalizedQuery) ||
         brandNorm.includes(normalizedQuery) ||
-        catNorm.includes(normalizedQuery);
+        catNorm.includes(normalizedQuery) ||
+        catTranslatedNorm.includes(normalizedQuery);
 
       if (!matches) {
         return false;

@@ -26,9 +26,9 @@ import { useFavoritesStore } from '@/features/favorites/presentation/stores/useF
 const DEFAULT_BUTTON_SIZE = 44;
 const ICON_SIZE_RATIO = 0.52;
 const INITIAL_SCALE = 1;
-const POP_SCALE = 1.25;
-const POP_SPRING_CONFIG = { damping: 10, stiffness: 300 };
-const RESET_SPRING_CONFIG = { damping: 12, stiffness: 200 };
+const POP_SCALE = 1.3;
+const POP_SPRING_CONFIG = { damping: 10, stiffness: 350 };
+const RESET_SPRING_CONFIG = { damping: 12, stiffness: 250 };
 
 export interface FavoriteButtonProps {
   readonly product: Product;
@@ -46,7 +46,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
     const toggle = useFavoritesStore((state) => state.toggle);
     const scale = useSharedValue(INITIAL_SCALE);
 
-    const animatedStyle = useAnimatedStyle(() => ({
+    const animatedIconStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
     }));
 
@@ -73,31 +73,29 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
               ? STRINGS.common.removeFavoriteA11y
               : STRINGS.common.addFavoriteA11y
           }
-          style={styles.expandedPressable}
+          style={({ pressed }) => [
+            styles.expandedContainer,
+            pressed && styles.pressed,
+            style,
+          ]}
         >
-          <Animated.View
-            style={[
-              styles.expandedContainer,
-              animatedStyle,
-              style,
-            ]}
-          >
+          <Animated.View style={animatedIconStyle}>
             <Ionicons
               name={isFav ? 'heart' : 'heart-outline'}
               size={18}
               color={COLORS.ink}
             />
-            <View style={styles.textSpacer} />
-            <Typography
-              variant="bodyBold"
-              color={COLORS.ink}
-              numberOfLines={1}
-            >
-              {isFav
-                ? STRINGS.favorites.savedFavorite
-                : STRINGS.favorites.saveFavorite}
-            </Typography>
           </Animated.View>
+          <View style={styles.textSpacer} />
+          <Typography
+            variant="bodyBold"
+            color={COLORS.ink}
+            numberOfLines={1}
+          >
+            {isFav
+              ? STRINGS.favorites.savedFavorite
+              : STRINGS.favorites.saveFavorite}
+          </Typography>
         </Pressable>
       );
     }
@@ -128,15 +126,14 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
             ? STRINGS.common.removeFavoriteA11y
             : STRINGS.common.addFavoriteA11y
         }
+        style={({ pressed }) => [
+          styles.baseContainer,
+          dynamicContainerStyle,
+          pressed && styles.pressed,
+          style,
+        ]}
       >
-        <Animated.View
-          style={[
-            styles.baseContainer,
-            dynamicContainerStyle,
-            animatedStyle,
-            style,
-          ]}
-        >
+        <Animated.View style={animatedIconStyle}>
           <Ionicons
             name={isFav ? 'heart' : 'heart-outline'}
             size={iconSize}
@@ -151,10 +148,6 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
 FavoriteButton.displayName = 'FavoriteButton';
 
 const styles = StyleSheet.create({
-  expandedPressable: {
-    flex: 1,
-    minWidth: 0,
-  },
   baseContainer: {
     minWidth: 44,
     minHeight: 44,
@@ -164,6 +157,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   expandedContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -174,6 +168,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
     width: '100%',
     ...SHADOWS.sm,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   textSpacer: {
     width: SPACING.xs,

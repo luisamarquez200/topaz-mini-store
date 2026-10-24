@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { Typography } from '@/shared/components/Typography';
 import { ProductCarousel } from '@/features/products/presentation/components/ProductCarousel';
 import { useProductDetail } from '@/features/products/presentation/hooks/useProductDetail';
+import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -98,7 +99,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           <View style={styles.metaRow}>
             <View style={styles.categoryChip}>
               <Typography variant="caption" color={COLORS.muted}>
-                {product.category.toUpperCase()}
+                {formatCategoryLabel(product.category).toUpperCase()}
               </Typography>
             </View>
 

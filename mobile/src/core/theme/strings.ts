@@ -59,8 +59,8 @@ export const STRINGS = Object.freeze({
   common: {
     retry: 'Reintentar',
     defaultErrorTitle: 'Ha ocurrido un problema',
-    unknownError: 'Unknown error occurred',
-    networkError: 'An error occurred while connecting to the server',
+    unknownError: 'Ha ocurrido un error inesperado',
+    networkError: 'Ocurrió un error al conectar con el servidor',
     addFavoriteA11y: 'Agregar a favoritos',
     removeFavoriteA11y: 'Quitar de favoritos',
   },

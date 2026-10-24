@@ -1,7 +1,7 @@
 import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
 
 describe('formatCategoryLabel', () => {
-  it('should format hyphenated categories into capitalized words', () => {
+  it('should translate known hyphenated categories into Spanish', () => {
     // Arrange
     const input = 'skin-care';
 
@@ -9,10 +9,10 @@ describe('formatCategoryLabel', () => {
     const result = formatCategoryLabel(input);
 
     // Assert
-    expect(result).toBe('Skin care');
+    expect(result).toBe('Cuidado facial');
   });
 
-  it('should format single word categories properly', () => {
+  it('should translate single word categories into Spanish', () => {
     // Arrange
     const input = 'beauty';
 
@@ -20,10 +20,10 @@ describe('formatCategoryLabel', () => {
     const result = formatCategoryLabel(input);
 
     // Assert
-    expect(result).toBe('Beauty');
+    expect(result).toBe('Belleza');
   });
 
-  it('should handle underscored categories', () => {
+  it('should handle underscored categories with translation', () => {
     // Arrange
     const input = 'home_decoration';
 
@@ -31,7 +31,18 @@ describe('formatCategoryLabel', () => {
     const result = formatCategoryLabel(input);
 
     // Assert
-    expect(result).toBe('Home decoration');
+    expect(result).toBe('Decoración');
+  });
+
+  it('should fallback to capitalized formatting for unknown categories', () => {
+    // Arrange
+    const input = 'custom-gear';
+
+    // Act
+    const result = formatCategoryLabel(input);
+
+    // Assert
+    expect(result).toBe('Custom gear');
   });
 
   it('should handle empty string safely', () => {
