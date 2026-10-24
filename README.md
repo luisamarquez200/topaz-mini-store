@@ -1,236 +1,250 @@
-# TOPAZ — Mini-Tienda (Full-Stack Monorepo)
+# TOPAZ — Mini-Tienda de Productos
 
-Monorepo de alto estándar técnico compuesto por un **Backend BFF / Proxy (Spring Boot 3.5 + Java 21 LTS)** con **Arquitectura Hexagonal Pura** y una **Aplicación Móvil (React Native + Expo + TypeScript Estricto)** con **Clean Architecture Feature-First**.
+[![CI](https://github.com/luisamarquez200/topaz-mini-store/actions/workflows/ci.yml/badge.svg)](https://github.com/luisamarquez200/topaz-mini-store/actions/workflows/ci.yml)
 
----
+Aplicación móvil en **React Native (Expo SDK 58 + TypeScript)** que consume un **microservicio Spring Boot 3.5 (Java 21) con arquitectura hexagonal**, el cual a su vez consume la API pública de [DummyJSON](https://dummyjson.com). Los favoritos se guardan localmente con **Zustand + MMKV**.
 
-## 🏗️ 1. Arquitectura y Decisiones Técnicas
-
-### 1.1 Backend: Arquitectura Hexagonal Pura (Ports & Adapters)
-- **Domain (`com.topaz.store.domain`)**: Java Records inmutables (`Product`, `ProductCategory`) y los puertos de entrada (`GetProductsUseCase`, `GetProductByIdUseCase`) y salida (`ProductExternalPort`) en `domain.port`. **Cero dependencias** de Spring, Jackson o librerías externas. Los precios se modelan con `BigDecimal` para evitar errores de redondeo.
-- **Application (`com.topaz.store.application`)**: `ProductService` implementa los casos de uso; es una clase Java pura sin anotaciones de Spring (`@Service` prohibido). La inyección de dependencias se gestiona en `BeanConfiguration`.
-- **Reglas verificadas automáticamente**: `ArchitectureTest` (ArchUnit) hace fallar el build si `domain` o `application` dependen de infraestructura o de frameworks.
-- **Infrastructure (`com.topaz.store.infrastructure`)**: 
-  - Adaptador de entrada REST (`ProductController`) bajo `/api/products`.
-  - Adaptador de salida HTTP (`DummyJsonAdapter` + `RestClient` / `DummyJsonClient`) con mapeo bidireccional estricto.
-  - Manejo global de excepciones (`GlobalExceptionHandler`) mapeando errores a RFC 7807 (`ProblemDetail`).
-  - Validación de entrada (`@Positive` sobre el `id` → `400 Bad Request` sin llamar a DummyJSON).
-  - Caché Caffeine (60 s), cliente HTTP con pool de conexiones (`JdkClientHttpRequestFactory`), *virtual threads*, apagado *graceful* y *health probes* (`/actuator/health/liveness|readiness`).
-  - CORS configurable por entorno (`TOPAZ_CORS_ALLOWED_ORIGINS`).
-
-### 1.2 Mobile: Clean Architecture Feature-First
-- **Estructura modular por feature**:
-  - `features/products/`: Dominio (incluye reglas de precio en `domain/pricing.ts`), casos de uso, búsqueda/filtrado/**ordenamiento** (`filterProducts`), repositorio, mapper, custom hooks (`useProductList`, `useProductDetail`, `useProductFilters`) y componentes UI (`ProductItem`, `ProductCarousel`, `CategoryChips`, `SortChips`, etc.).
-  - `features/favorites/`: Estado global con **Zustand + MMKV** (`useFavoritesStore`), `FavoriteButton` con animaciones de **React Native Reanimated** y respuesta háptica con `expo-haptics`.
-- **Features desacopladas**: `products` no importa nada de `favorites`; la navegación (`TabNavigator`, `RootNavigator`) compone ambas inyectando el botón de favoritos mediante *render props*. `shared/` no depende de ninguna feature.
-- **Errores localizados**: `apiClient` traduce cada código HTTP (404, 502/503, 504, sin red…) a mensajes en español de `STRINGS`; el detalle técnico del servidor se conserva en `ApiError.detail` solo para diagnóstico.
-- **Separación de Lógica y Presentación (MVVM)**: Las vistas (`ProductListView`, `ProductDetailView`, `FavoritesListView`) son puramente presentacionales; la lógica reside en custom hooks.
-- **Tokens de Diseño Centralizados**: Cero *magic strings* y cero colores *hardcodeados*. Todo se consume de `core/theme/` (`colors.ts`, `spacing.ts`, `typography.ts`, `shadows.ts`, `strings.ts`).
-- **Resiliencia de Entornos**: El storage en `mmkvStorage.ts` incluye fallback seguro en memoria para entornos de testing (Jest) o donde el módulo nativo MMKV no esté disponible.
+| Productos | Detalle | Favoritos |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/products.png" width="240" alt="Lista de productos" /> | <img src="docs/screenshots/detail.png" width="240" alt="Detalle del producto" /> | <img src="docs/screenshots/favorites.png" width="240" alt="Favoritos" /> |
 
 ---
 
-## 📊 2. Diagramas de Arquitectura (Mermaid)
+## Contenido
 
-### 2.1 Flujo de Datos End-to-End
+1. [Inicio rápido](#1-inicio-rápido)
+2. [Requisitos de la prueba](#2-requisitos-de-la-prueba)
+3. [Arquitectura](#3-arquitectura)
+4. [Requisitos previos](#4-requisitos-previos)
+5. [Cómo ejecutar](#5-cómo-ejecutar)
+6. [Tests y calidad](#6-tests-y-calidad)
+7. [Solución de problemas](#7-solución-de-problemas)
+
+---
+
+## 1. Inicio rápido
+
+```bash
+# Terminal 1 — backend (http://localhost:8080)
+cd backend
+./mvnw spring-boot:run
+
+# Terminal 2 — app (se abre en el navegador)
+cd mobile
+npm install
+npm run web
+```
+
+Para iOS o Android, ver [sección 5](#5-cómo-ejecutar).
+
+---
+
+## 2. Requisitos de la prueba
+
+| Requisito | Implementación |
+|---|---|
+| Pantalla **Productos** con `FlatList`, imagen, título y precio | `ProductListView` + `ProductItem` (`React.memo`) |
+| Estados de carga y error | Skeleton / `ActivityIndicator` y `ErrorView` con botón de reintento |
+| Pantalla **Detalle** por ID | `ProductDetailView` + hook `useProductDetail` |
+| Carrusel de imágenes | `ProductCarousel`: `FlatList` horizontal con `pagingEnabled` e indicadores |
+| Título, descripción, precio y rating | `ProductDetailView` |
+| Botón **Añadir a Favoritos** con feedback visual | `FavoriteButton` (animado con Reanimated) |
+| Pantalla **Favoritos** desde almacenamiento local, en tiempo real | `FavoritesListView` suscrita al store de Zustand |
+| TypeScript | Modo estricto; `npm run typecheck` sin errores |
+| Componentes funcionales, hooks y custom hooks | `useProductList`, `useProductDetail`, `useProductFilters`, `useFavorites`, `useDebouncedValue` |
+| React Navigation 6+ (Stack + Bottom Tabs) | React Navigation 7: `RootNavigator` (native stack) + `TabNavigator` |
+| Estado global | Zustand (`useFavoritesStore`) |
+| Persistencia | MMKV mediante el middleware `persist` de Zustand |
+| Estilos | `StyleSheet` nativo con tokens de diseño en `core/theme/` |
+| Networking | Axios (`core/api/apiClient.ts`) |
+| Optimización de `FlatList` | `keyExtractor`, `ItemSeparatorComponent`, `renderItem` memoizado, ítems con `React.memo` |
+| Microservicio Spring Boot hexagonal | `backend/`, con reglas de capas verificadas por ArchUnit |
+| **Bonus:** Jest + React Native Testing Library | 73 tests en mobile |
+| **Bonus:** Reanimated | Animación del corazón al marcar favorito |
+
+**Extras:** búsqueda con *debounce*, filtro por categoría, ordenamiento por precio y rating, mensajes de error en español, respuesta háptica, caché en el backend, Swagger, Dockerfile y CI en GitHub Actions.
+
+---
+
+## 3. Arquitectura
+
+### 3.1 Backend: arquitectura hexagonal (Ports & Adapters)
+
+```
+backend/src/main/java/com/topaz/store/
+├── domain/            # Records inmutables y puertos (in/out). Sin dependencias de Spring.
+├── application/       # ProductService: implementa los casos de uso. Java puro, sin anotaciones.
+└── infrastructure/
+    ├── adapter/in/    # ProductController (REST) y DTOs de respuesta
+    ├── adapter/out/   # DummyJsonAdapter + DummyJsonClient (RestClient) y mapper
+    ├── config/        # Wiring de beans, CORS, caché, propiedades
+    └── exception/     # GlobalExceptionHandler → respuestas RFC 7807 (ProblemDetail)
+```
+
+- **Endpoints:** `GET /api/products` y `GET /api/products/{id}`. Documentación en Swagger UI: http://localhost:8080/swagger-ui.html
+- **Reglas de capas verificadas:** `ArchitectureTest` (ArchUnit) hace fallar el build si `domain` o `application` dependen de infraestructura o de Spring.
+- **Robustez:** validación del `id` (`@Positive` → `400` sin llamar a DummyJSON), errores del proveedor mapeados a `404`/`502`/`504`, caché Caffeine de 60 s, timeouts configurables y *health probes* en `/actuator/health`.
+- **Precios** modelados con `BigDecimal`.
+
+### 3.2 Mobile: Clean Architecture por feature
+
+```
+mobile/src/
+├── core/              # apiClient (Axios), configuración, storage MMKV, tema y textos
+├── di/                # Composición de repositorios y casos de uso
+├── features/
+│   ├── products/      # domain → application → infrastructure → presentation
+│   └── favorites/     # Store de Zustand persistido + FavoriteButton + vista
+├── navigation/        # RootNavigator (stack) y TabNavigator (tabs)
+└── shared/            # Componentes y hooks reutilizables
+```
+
+- **Vistas presentacionales, lógica en hooks:** las vistas solo renderizan; la carga de datos y el estado viven en custom hooks.
+- **Features desacopladas:** `products` no importa nada de `favorites`. La navegación inyecta el botón de favoritos en las vistas de productos mediante *render props*.
+- **Errores localizados:** `apiClient` traduce cada código HTTP y los fallos de red a mensajes en español.
+- **Tokens de diseño:** colores, espaciados, tipografía y textos centralizados en `core/theme/`.
+
+### 3.3 Flujo de datos
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Usuario
-    participant View as Mobile UI View
-    participant Hook as Custom Hook (ViewModel)
+    participant View as Vista (React Native)
+    participant Hook as Custom hook
     participant Repo as ProductRepository
-    participant Client as apiClient (Axios)
-    participant Controller as Backend ProductController
-    participant UseCase as GetProductsUseCase
-    participant Service as ProductService
-    participant Port as ProductExternalPort
+    participant API as Backend /api/products
     participant Adapter as DummyJsonAdapter
-    participant DummyJSON as DummyJSON API
+    participant DJ as DummyJSON
 
     Usuario->>View: Abre la pestaña Productos
     View->>Hook: useProductList()
     Hook->>Repo: getAll()
-    Repo->>Client: GET /api/products
-    Client->>Controller: HTTP GET http://localhost:8080/api/products
-    Controller->>UseCase: getProducts()
-    UseCase->>Service: getProducts()
-    Service->>Port: fetchAllProducts()
-    Port->>Adapter: fetchAllProducts()
-    Adapter->>DummyJSON: GET https://dummyjson.com/products
-    DummyJSON-->>Adapter: 200 OK (JSON)
-    Adapter-->>Service: List<Product> (Domain Records)
-    Service-->>Controller: List<Product>
-    Controller-->>Client: 200 OK (List<ProductResponseDto>)
-    Client-->>Repo: ProductDto[]
-    Repo-->>Hook: Product[] (Domain Entities)
-    Hook-->>View: State: { products, loading: false }
-    View-->>Usuario: Renderiza Catálogo con Skeleton y Animaciones
-```
-
-### 2.2 Diagrama de Capas del Monorepo
-
-```mermaid
-graph TD
-    subgraph Mobile ["📱 Mobile (React Native + Expo)"]
-        direction TB
-        UI["🎨 Presentation Layer\n(Views, Components, Custom Hooks)"]
-        AppL["⚙️ Application Layer\n(Use Cases: GetProductsUseCase)"]
-        DomL["📦 Domain Layer\n(Product, ProductCategory, IProductRepository)"]
-        InfL["🌐 Infrastructure Layer\n(apiClient, ProductDto, ProductMapper, MMKV)"]
-        
-        UI --> AppL
-        UI --> DomL
-        AppL --> DomL
-        InfL --> DomL
-        UI --> InfL
-    end
-
-    subgraph Backend ["☕ Backend (Spring Boot 3)"]
-        direction TB
-        REST["🚪 Inbound Adapter\n(ProductController, GlobalExceptionHandler)"]
-        InPort["📥 Inbound Port\n(GetProductsUseCase, GetProductByIdUseCase)"]
-        AppS["🧠 Application Service\n(ProductService - Pure POJO)"]
-        DomB["💎 Domain\n(Product Record, ProductCategory)"]
-        OutPort["📤 Outbound Port\n(ProductExternalPort)"]
-        OutAdap["🔌 Outbound Adapter\n(DummyJsonAdapter, DummyJsonClient)"]
-
-        REST --> InPort
-        InPort --> AppS
-        AppS --> DomB
-        AppS --> OutPort
-        OutPort --> OutAdap
-    end
-
-    subgraph External ["☁️ Servicios Externos"]
-        DJ["DummyJSON API\n(https://dummyjson.com)"]
-    end
-
-    InfL -->|HTTP REST| REST
-    OutAdap -->|HTTP RestClient| DJ
+    Repo->>API: GET /api/products (Axios)
+    API->>Adapter: caso de uso → puerto de salida
+    Adapter->>DJ: GET https://dummyjson.com/products
+    DJ-->>Adapter: JSON
+    Adapter-->>API: List<Product> (dominio)
+    API-->>Repo: ProductResponseDto[]
+    Repo-->>Hook: Product[] (dominio)
+    Hook-->>View: { products, loading, error }
 ```
 
 ---
 
-## 🛠️ 3. Requisitos Previos
+## 4. Requisitos previos
 
-- **macOS** (probado en macOS Sequoia 15.6+ / Apple Silicon & Intel).
-- **Java**: 21+ (`java -version`). Maven **no** es necesario: el proyecto incluye Maven Wrapper (`./mvnw`).
-- **Node.js**: 20+ o 22 (`node -v`).
-- **Xcode**: 16.0+ con Command Line Tools instaladas (`xcode-select --install`) y un simulador de iOS activo (ej. iPhone 16 Plus con iOS 18+).
-- **CocoaPods**: (`brew install cocoapods` o `gem install cocoapods`).
+| Herramienta | Versión | Para qué |
+|---|---|---|
+| Java (JDK) | 21+ | Backend. Maven **no** es necesario: se incluye Maven Wrapper (`./mvnw`). |
+| Node.js | 20 o 22 | App móvil |
+| Navegador moderno | — | Versión web (la forma más rápida de probar) |
+| Xcode | 26+ | Solo iOS (Expo SDK 58 no compila con versiones anteriores), con CocoaPods |
+| Android Studio | Reciente, con un emulador | Solo Android |
 
 ---
 
-## 🚀 4. Guía de Ejecución Paso a Paso
+## 5. Cómo ejecutar
 
-### 4.1 Backend (Spring Boot)
-
-En una terminal dedicada:
+### 5.1 Backend
 
 ```bash
 cd backend
-./mvnw clean spring-boot:run
+./mvnw spring-boot:run
 ```
 
-**Documentación interactiva (Swagger UI):** http://localhost:8080/swagger-ui.html
+Comprobación:
 
-**Con Docker:**
+```bash
+curl http://localhost:8080/api/products
+curl http://localhost:8080/api/products/1
+```
+
+Con Docker:
+
 ```bash
 cd backend
 docker build -t topaz-backend .
-docker run -p 8080:8080 -e TOPAZ_CORS_ALLOWED_ORIGINS="http://localhost:8081" topaz-backend
+docker run -p 8080:8080 topaz-backend
 ```
 
-**Verificación de salud del backend:**
-```bash
-# Listado de productos
-curl -i http://localhost:8080/api/products
-
-# Detalle de producto específico
-curl -i http://localhost:8080/api/products/1
-```
-
----
-
-### 4.2 Mobile (iOS Simulator)
-
-En una segunda terminal:
+### 5.2 App en el navegador
 
 ```bash
 cd mobile
 npm install
-
-# Iniciar servidor Metro en localhost y abrir en iOS Simulator
-npx expo start --localhost --ios
+npm run web
 ```
 
-> **Dispositivo físico:** copia `mobile/.env.example` a `mobile/.env.local` y define `EXPO_PUBLIC_API_URL` con la IP de tu Mac en la red local (p. ej. `http://192.168.1.50:8080/api`). Sin esa variable se usan los valores por defecto del simulador/emulador.
+Se abre en http://localhost:8081. Para verla con tamaño de teléfono, activa el modo dispositivo en las herramientas de desarrollador del navegador.
 
-> **Nota:** La aplicación se abre automáticamente en el simulador configurado (`iPhone 16 Plus`). Puedes pulsar `r` en la terminal de Metro en cualquier momento para recargar la aplicación en caliente (*Fast Refresh*).
+### 5.3 App en iOS (simulador)
 
----
+La app usa MMKV, que requiere código nativo, así que se compila una *development build* (no funciona en Expo Go):
 
-### 4.3 Mobile (Android Emulator)
+```bash
+cd mobile
+npm install
+npx expo run:ios
+```
 
-1. Abre **Android Studio** e inicia un emulador desde el *Device Manager* (recomendado imagen `arm64-v8a` para procesadores Apple Silicon).
-2. Asegúrate de tener `ANDROID_HOME` configurado en tu terminal:
-   ```bash
-   export ANDROID_HOME=$HOME/Library/Android/sdk
-   export PATH=$PATH:$ANDROID_HOME/emulator:$PATH:$ANDROID_HOME/platform-tools
-   ```
-3. Ejecuta:
+### 5.4 App en Android (emulador)
+
+1. Inicia un emulador desde el *Device Manager* de Android Studio.
+2. Ejecuta:
    ```bash
    cd mobile
+   npm install
    npx expo run:android
    ```
-> **Nota de Red:** La configuración de red en `mobile/src/core/config/env.ts` mapea automáticamente la URL del backend a `http://10.0.2.2:8080/api` en Android, que es la dirección puente del emulador hacia el `localhost` de tu Mac.
+
+En Android, la app usa automáticamente `http://10.0.2.2:8080/api`, que es la dirección del emulador hacia el `localhost` del computador.
+
+### 5.5 Dispositivo físico
+
+Copia `mobile/.env.example` a `mobile/.env.local` y define `EXPO_PUBLIC_API_URL` con la IP del computador en la red local (por ejemplo `http://192.168.1.50:8080/api`). Con un Android conectado por USB también puedes usar `adb reverse tcp:8080 tcp:8080`.
 
 ---
 
-## 🧪 5. Ejecución de Tests
+## 6. Tests y calidad
 
-Ambas suites de pruebas siguen estrictamente la estructura **AAA** (*Arrange, Act, Assert*) y están verificadas al 100%.
+### Backend: 26 tests
 
-### Tests del Backend (26 pruebas unitarias, de integración y de arquitectura)
 ```bash
 cd backend
 ./mvnw verify
 ```
-- Cobertura: Casos de uso de productos, controlador REST con `MockMvc` (incluida validación del `id`), cliente externo `RestClient` con `MockRestServiceServer`, adaptador con mapeo de errores y reglas hexagonales con ArchUnit.
 
-### Calidad y Tests de Mobile (73 pruebas unitarias y de componentes)
+Casos de uso, controlador REST con `MockMvc` (incluida la validación del `id`), cliente HTTP con `MockRestServiceServer`, adaptador y mapper, y reglas de arquitectura con ArchUnit.
+
+### Mobile: 73 tests
+
 ```bash
 cd mobile
-npm run typecheck     # TypeScript estricto
-npm run lint          # ESLint (eslint-config-expo + Prettier)
+npm run typecheck     # TypeScript
+npm run lint          # ESLint
 npm run format:check  # Prettier
-npm test              # Jest
-npm run validate      # todo lo anterior + cobertura
+npm test              # Jest + React Native Testing Library
+npm run validate      # typecheck + lint + tests con cobertura
 ```
-- Cobertura: Store de Zustand + persistencia, custom hooks con `renderHook` (`useProductList`, `useProductDetail`, `useProductFilters`), vistas (`ProductListView` con ordenamiento, `ProductDetailView`, `FavoritesListView`), componentes UI, `apiClient` (errores localizados), repositorio, mapper, reglas de precio y formateo.
 
-### Integración Continua
-`.github/workflows/ci.yml` ejecuta en cada *push* y *pull request* el build del backend (`./mvnw verify`) y la validación completa del mobile (typecheck, lint, formato y tests).
+Store de favoritos y su persistencia, custom hooks (`renderHook`), vistas, componentes, `apiClient`, repositorio, mapper y utilidades de precio y formato.
+
+### Integración continua
+
+`.github/workflows/ci.yml` ejecuta en cada *push* y *pull request* los tests del backend y la validación completa del mobile.
 
 ---
 
-## 🔧 6. Solución de Problemas (Troubleshooting)
+## 7. Solución de problemas
 
-### 1. Codificación UTF-8 en CocoaPods / Ruby 3.4
-Si al ejecutar comandos de CocoaPods obtienes un error como `UnicodeNormalize not appropriate for ASCII-8BIT`:
+**`Network Error` en la app.** Verifica que el backend esté corriendo: `curl http://localhost:8080/api/products`.
+
+**Android no conecta con el backend.** El emulador no ve `localhost`; la app ya usa `10.0.2.2`. En un dispositivo físico, usa `EXPO_PUBLIC_API_URL` o `adb reverse` (sección 5.5).
+
+**Error de codificación de CocoaPods (`UnicodeNormalize not appropriate for ASCII-8BIT`).**
+
 ```bash
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-pod install --project-directory=mobile/ios
-```
-
-### 2. Error de red `Network request failed` en iOS Simulator
-El simulador de iOS comparte la pila de red con tu Mac. Asegúrate de que el backend esté arriba en el puerto 8080 (`curl http://localhost:8080/api/products`).
-
-### 3. Conexión en Emulador de Android
-Los emuladores de Android no pueden acceder al host mediante `localhost`. El archivo `mobile/src/core/config/env.ts` ya contempla `http://10.0.2.2:8080/api` mediante `Platform.select`. Si usas un dispositivo físico por USB, ejecuta:
-```bash
-adb reverse tcp:8080 tcp:8080
 ```
