@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { COLORS } from '@/core/theme/colors';
 import { STRINGS } from '@/core/theme/strings';
+import { FONT_FAMILY } from '@/core/theme/typography';
 import { TabNavigator } from '@/navigation/TabNavigator';
 import { RootStackParamList } from '@/navigation/types';
 import { Product } from '@/features/products/domain/types/Product';
@@ -18,8 +19,8 @@ const ROOT_NAVIGATOR_SCREEN_OPTIONS: NativeStackNavigationOptions = {
     backgroundColor: COLORS.surface,
   },
   headerTitleStyle: {
-    color: COLORS.primary,
-    fontWeight: '700',
+    color: COLORS.ink,
+    fontFamily: FONT_FAMILY.bold,
   },
   headerTintColor: COLORS.accent,
   headerBackTitle: STRINGS.nav.back,
@@ -36,7 +37,8 @@ const MAIN_TABS_SCREEN_OPTIONS: NativeStackNavigationOptions = {
 
 const DETAIL_SCREEN_OPTIONS: NativeStackNavigationOptions = {
   title: STRINGS.nav.detailTitle,
-  headerBackTitle: STRINGS.nav.back,
+  headerBackTitle: '',
+  headerBackButtonDisplayMode: 'minimal',
 };
 
 const renderDetailFavoriteButton = (product: Product): React.ReactNode => (

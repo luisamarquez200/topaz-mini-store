@@ -38,7 +38,7 @@ export const Button: React.FC<ButtonProps> = ({
     const base: ViewStyle = {
       paddingVertical: SPACING.md,
       paddingHorizontal: SPACING.xl,
-      borderRadius: RADIUS.md,
+      borderRadius: RADIUS.pill,
       alignItems: 'center',
       justifyContent: 'center',
       flexDirection: 'row',

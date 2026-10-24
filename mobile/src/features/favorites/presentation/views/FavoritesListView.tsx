@@ -6,9 +6,11 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/core/theme/colors';
 import { SPACING } from '@/core/theme/spacing';
 import { STRINGS } from '@/core/theme/strings';
+import { Button } from '@/shared/components/Button';
 import { CenteredState } from '@/shared/components/CenteredState';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
@@ -17,17 +19,28 @@ import { FavoriteButton } from '@/features/favorites/presentation/components/Fav
 import { useFavorites } from '@/features/favorites/presentation/hooks/useFavorites';
 
 const INITIAL_NUM_TO_RENDER = 10;
-const FAVORITE_BUTTON_SIZE = 36;
+const FAVORITE_BUTTON_SIZE = 44;
+const EMPTY_HEART_ICON_SIZE = 56;
 
 const keyExtractor = (item: Product): string => item.id.toString();
 
 const ItemSeparator: React.FC = () => <View style={styles.separator} />;
 
-const EmptyFavoritesState: React.FC = () => (
-  <CenteredState>
+interface EmptyFavoritesProps {
+  readonly onExplore: () => void;
+}
+
+const EmptyFavoritesState: React.FC<EmptyFavoritesProps> = ({ onExplore }) => (
+  <CenteredState style={styles.emptyContainer}>
+    <Ionicons
+      name="heart-outline"
+      size={EMPTY_HEART_ICON_SIZE}
+      color={COLORS.muted}
+      style={styles.emptyIcon}
+    />
     <Typography
       variant="title"
-      color={COLORS.text}
+      color={COLORS.ink}
       align="center"
       style={styles.emptyTitle}
     >
@@ -35,12 +48,18 @@ const EmptyFavoritesState: React.FC = () => (
     </Typography>
     <Typography
       variant="body"
-      color={COLORS.textSecondary}
+      color={COLORS.muted}
       align="center"
       style={styles.emptySubtitle}
     >
       {STRINGS.favorites.emptySubtitle}
     </Typography>
+    <Button
+      title={STRINGS.favorites.exploreButton}
+      onPress={onExplore}
+      variant="primary"
+      style={styles.exploreButton}
+    />
   </CenteredState>
 );
 
@@ -55,6 +74,10 @@ export const FavoritesListView: React.FC = () => {
     [navigation]
   );
 
+  const handleExplore = useCallback((): void => {
+    navigation.navigate('MainTabs', { screen: 'ProductsTab' });
+  }, [navigation]);
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Product>) => (
       <ProductItem
@@ -67,7 +90,7 @@ export const FavoritesListView: React.FC = () => {
   );
 
   if (isEmpty) {
-    return <EmptyFavoritesState />;
+    return <EmptyFavoritesState onExplore={handleExplore} />;
   }
 
   return (
@@ -89,6 +112,7 @@ export const FavoritesListView: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   listContent: {
     paddingVertical: SPACING.lg,
@@ -96,10 +120,20 @@ const styles = StyleSheet.create({
   separator: {
     height: SPACING.md,
   },
+  emptyContainer: {
+    backgroundColor: COLORS.background,
+  },
+  emptyIcon: {
+    marginBottom: SPACING.md,
+  },
   emptyTitle: {
     marginBottom: SPACING.xs,
   },
   emptySubtitle: {
     maxWidth: 280,
+    marginBottom: SPACING.xl,
+  },
+  exploreButton: {
+    minWidth: 180,
   },
 });

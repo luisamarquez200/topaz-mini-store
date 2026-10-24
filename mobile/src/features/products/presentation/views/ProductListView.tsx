@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
   ListRenderItemInfo,
@@ -15,7 +15,11 @@ import { ErrorView } from '@/shared/components/ErrorView';
 import { ProductListSkeleton } from '@/shared/components/ProductCardSkeleton';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
+import { CategoryChips } from '@/features/products/presentation/components/CategoryChips';
 import { ProductItem } from '@/features/products/presentation/components/ProductItem';
+import { SearchBar } from '@/features/products/presentation/components/SearchBar';
+import { SearchEmptyState } from '@/features/products/presentation/components/SearchEmptyState';
+import { useProductFilters } from '@/features/products/presentation/hooks/useProductFilters';
 import { useProductList } from '@/features/products/presentation/hooks/useProductList';
 
 const INITIAL_NUM_TO_RENDER = 10;
@@ -24,25 +28,19 @@ const keyExtractor = (item: Product): string => item.id.toString();
 
 const ItemSeparator: React.FC = () => <View style={styles.separator} />;
 
-const EmptyList: React.FC = () => (
-  <CenteredState>
-    <Typography variant="title" color={COLORS.text} align="center">
-      {STRINGS.products.emptyList}
-    </Typography>
-    <Typography
-      variant="body"
-      color={COLORS.textSecondary}
-      align="center"
-      style={styles.emptySubtitle}
-    >
-      {STRINGS.products.placeholderCatalogSubtitle}
-    </Typography>
-  </CenteredState>
-);
-
 export const ProductListView: React.FC = () => {
   const navigation = useNavigation();
   const { data, isLoading, error, refetch } = useProductList();
+  const {
+    query,
+    setQuery,
+    category,
+    setCategory,
+    categories,
+    filteredProducts,
+    hasActiveFilters,
+    clearFilters,
+  } = useProductFilters(data);
 
   const handleProductPress = useCallback(
     (productId: number): void => {
@@ -57,6 +55,53 @@ export const ProductListView: React.FC = () => {
     ),
     [handleProductPress]
   );
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.headerContainer}>
+        <Typography
+          variant="heading"
+          color={COLORS.ink}
+          style={styles.screenTitle}
+        >
+          {STRINGS.nav.productsTitle}
+        </Typography>
+        <SearchBar
+          value={query}
+          onChangeText={setQuery}
+          style={styles.searchBar}
+        />
+        <CategoryChips
+          categories={categories}
+          selectedCategory={category}
+          onSelectCategory={setCategory}
+          style={styles.categoryChips}
+        />
+      </View>
+    ),
+    [query, setQuery, category, setCategory, categories]
+  );
+
+  const listEmpty = useMemo(() => {
+    if (hasActiveFilters) {
+      return <SearchEmptyState onClearFilters={clearFilters} />;
+    }
+    return (
+      <CenteredState>
+        <Typography variant="title" color={COLORS.ink} align="center">
+          {STRINGS.products.emptyList}
+        </Typography>
+        <Typography
+          variant="body"
+          color={COLORS.muted}
+          align="center"
+          style={styles.emptySubtitle}
+        >
+          {STRINGS.products.placeholderCatalogSubtitle}
+        </Typography>
+      </CenteredState>
+    );
+  }, [hasActiveFilters, clearFilters]);
 
   if (isLoading && data.length === 0) {
     return <ProductListSkeleton />;
@@ -77,21 +122,24 @@ export const ProductListView: React.FC = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={data}
+        data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
         ItemSeparatorComponent={ItemSeparator}
-        ListEmptyComponent={EmptyList}
         contentContainerStyle={styles.listContent}
         initialNumToRender={INITIAL_NUM_TO_RENDER}
         removeClippedSubviews
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={refetch}
-            tintColor={COLORS.accent}
-            colors={[COLORS.accent]}
+            tintColor={COLORS.ink}
+            colors={[COLORS.ink]}
           />
         }
       />
@@ -102,9 +150,25 @@ export const ProductListView: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  headerContainer: {
+    paddingBottom: SPACING.sm,
+  },
+  screenTitle: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  searchBar: {
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  categoryChips: {
+    marginBottom: SPACING.xs,
   },
   listContent: {
-    paddingVertical: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
   separator: {
     height: SPACING.md,

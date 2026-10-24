@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     height: CAROUSEL_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: COLORS.imageBackground,
     borderBottomLeftRadius: RADIUS.xl,
     borderBottomRightRadius: RADIUS.xl,
   },

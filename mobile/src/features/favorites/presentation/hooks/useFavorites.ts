@@ -41,3 +41,7 @@ export const useIsFavorite = (productId: number): boolean => {
     state.favorites.some((item) => item.id === productId)
   );
 };
+
+export const useFavoritesCount = (): number => {
+  return useFavoritesStore((state) => state.favorites.length);
+};

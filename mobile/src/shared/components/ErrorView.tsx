@@ -25,7 +25,7 @@ export const ErrorView: React.FC<ErrorViewProps> = ({
     <View style={[styles.container, style]}>
       <View style={styles.card}>
         <View style={styles.iconCircle}>
-          <Typography variant="heading" color={COLORS.error}>
+          <Typography variant="heading" color={COLORS.danger}>
             !
           </Typography>
         </View>
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: RADIUS.round,
-    backgroundColor: COLORS.errorLight,
+    backgroundColor: COLORS.imageBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.lg,

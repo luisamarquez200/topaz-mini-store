@@ -1,20 +1,31 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Pressable,
   StyleSheet,
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
 import { SHADOWS } from '@/core/theme/shadows';
 import { STRINGS } from '@/core/theme/strings';
+import { FavoriteButton } from '@/shared/components/FavoriteButton';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 
-const THUMBNAIL_SIZE = 88;
+const PRODUCT_IMAGE_SIZE = 96;
 const IMAGE_TRANSITION_MS = 200;
+const PRESSED_SCALE = 0.98;
+const DEFAULT_SCALE = 1;
+const SPRING_CONFIG = { damping: 15, stiffness: 300 };
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export interface ProductItemProps {
   readonly product: Product;
@@ -24,17 +35,35 @@ export interface ProductItemProps {
 
 export const ProductItem: React.FC<ProductItemProps> = React.memo(
   ({ product, onPress, rightAction }) => {
-    const handlePress = (): void => {
+    const scale = useSharedValue(DEFAULT_SCALE);
+
+    const animatedCardStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
+
+    const handlePressIn = useCallback((): void => {
+      scale.value = withSpring(PRESSED_SCALE, SPRING_CONFIG);
+    }, [scale]);
+
+    const handlePressOut = useCallback((): void => {
+      scale.value = withSpring(DEFAULT_SCALE, SPRING_CONFIG);
+    }, [scale]);
+
+    const handlePress = useCallback((): void => {
       onPress(product.id);
-    };
+    }, [onPress, product.id]);
+
+    const originalPrice =
+      product.discountPercentage > 0
+        ? product.price / (1 - product.discountPercentage / 100)
+        : null;
 
     return (
-      <Pressable
+      <AnimatedPressable
         onPress={handlePress}
-        style={({ pressed }) => [
-          styles.container,
-          pressed ? styles.pressed : null,
-        ]}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[styles.container, animatedCardStyle]}
         accessibilityRole="button"
         accessibilityLabel={product.title}
       >
@@ -48,7 +77,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
           />
           {product.discountPercentage > 0 && (
             <View style={styles.discountBadge}>
-              <Typography variant="caption" color={COLORS.error}>
+              <Typography variant="caption" color={COLORS.ink}>
                 {`-${Math.round(product.discountPercentage)}%`}
               </Typography>
             </View>
@@ -56,41 +85,60 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
         </View>
 
         <View style={styles.info}>
-          <View style={styles.categoryRow}>
-            <Typography
-              variant="caption"
-              color={COLORS.accent}
-              numberOfLines={1}
-            >
-              {product.category.toUpperCase()}
-            </Typography>
-          </View>
+          <Typography
+            variant="caption"
+            color={COLORS.muted}
+            numberOfLines={1}
+          >
+            {product.category.toUpperCase()}
+          </Typography>
 
           <Typography
             variant="subtitle"
-            color={COLORS.text}
+            color={COLORS.ink}
             numberOfLines={2}
             style={styles.title}
           >
             {product.title}
           </Typography>
 
-          <View style={styles.footer}>
-            <Typography variant="title" color={COLORS.primary}>
-              {formatPrice(product.price)}
+          <View style={styles.ratingRow}>
+            <Typography variant="caption" color={COLORS.ink} style={styles.starText}>
+              {STRINGS.products.starSymbol}
             </Typography>
-            <View style={styles.ratingBadge}>
-              <Typography variant="smBold" color={COLORS.topazGold}>
-                {STRINGS.products.star}{product.rating.toFixed(1)}
+            <Typography variant="caption" color={COLORS.muted} style={styles.ratingText}>
+              {product.rating.toFixed(1)}
+            </Typography>
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.pricePill}>
+              <Typography
+                variant="price"
+                color={COLORS.surface}
+                numberOfLines={1}
+                style={styles.priceText}
+              >
+                {formatPrice(product.price)}
               </Typography>
             </View>
+            {originalPrice !== null && (
+              <Typography
+                variant="caption"
+                color={COLORS.subtle}
+                numberOfLines={1}
+                style={styles.originalPriceText}
+              >
+                {formatPrice(originalPrice)}
+              </Typography>
+            )}
           </View>
         </View>
 
-        {rightAction !== undefined && (
-          <View style={styles.actionContainer}>{rightAction}</View>
-        )}
-      </Pressable>
+        <View style={styles.actionContainer}>
+          {rightAction ?? <FavoriteButton product={product} />}
+        </View>
+      </AnimatedPressable>
     );
   }
 );
@@ -102,60 +150,76 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
     padding: SPACING.md,
-    borderRadius: RADIUS.lg,
+    borderRadius: RADIUS.card,
     marginHorizontal: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
     alignItems: 'center',
-    ...SHADOWS.sm,
-  },
-  pressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.99 }],
+    ...SHADOWS.card,
   },
   imageWrapper: {
     position: 'relative',
   },
   thumbnail: {
-    width: THUMBNAIL_SIZE,
-    height: THUMBNAIL_SIZE,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surfaceMuted,
+    width: PRODUCT_IMAGE_SIZE,
+    height: PRODUCT_IMAGE_SIZE,
+    borderRadius: RADIUS.image,
+    backgroundColor: COLORS.imageBackground,
   },
   discountBadge: {
     position: 'absolute',
     top: SPACING.xs,
     left: SPACING.xs,
-    backgroundColor: COLORS.errorLight,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     paddingHorizontal: SPACING.xs,
     paddingVertical: SPACING.xxs,
-    borderRadius: RADIUS.xs,
+    borderRadius: RADIUS.pill,
   },
   info: {
     flex: 1,
     marginLeft: SPACING.md,
     justifyContent: 'center',
   },
-  categoryRow: {
+  title: {
+    marginTop: SPACING.xxs,
+    marginBottom: SPACING.xxs,
+  },
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.xxs,
+    marginBottom: SPACING.xs,
   },
-  title: {
-    marginVertical: SPACING.xxs,
+  starText: {
+    fontSize: 12,
+    lineHeight: 14,
+  },
+  ratingText: {
+    fontSize: 12,
+    lineHeight: 14,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: SPACING.xs,
+    gap: SPACING.xs,
   },
-  ratingBadge: {
-    backgroundColor: COLORS.topazGoldLight,
+  pricePill: {
+    backgroundColor: COLORS.pillDark,
+    borderRadius: RADIUS.pill,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xxs,
-    borderRadius: RADIUS.xs,
+    alignSelf: 'flex-start',
+  },
+  priceText: {
+    flexShrink: 0,
+  },
+  originalPriceText: {
+    textDecorationLine: 'line-through',
+    flexShrink: 0,
   },
   actionContainer: {
     marginLeft: SPACING.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -10,6 +10,7 @@ export type TypographyVariant =
   | 'subtitle'
   | 'body'
   | 'bodyBold'
+  | 'price'
   | 'sm'
   | 'smBold'
   | 'caption';

@@ -5,11 +5,11 @@ import {
   View,
 } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
 import { SHADOWS } from '@/core/theme/shadows';
 import { STRINGS } from '@/core/theme/strings';
-import { RootStackParamList } from '@/navigation/types';
 import { CenteredState } from '@/shared/components/CenteredState';
 import { ErrorView } from '@/shared/components/ErrorView';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
@@ -17,6 +17,7 @@ import { Typography } from '@/shared/components/Typography';
 import { ProductCarousel } from '@/features/products/presentation/components/ProductCarousel';
 import { useProductDetail } from '@/features/products/presentation/hooks/useProductDetail';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
+import { RootStackParamList } from '@/navigation/types';
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
 
@@ -33,6 +34,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   renderFavoriteButton,
   renderBottomAction,
 }) => {
+  const insets = useSafeAreaInsets();
   const route = useRoute<ProductDetailRouteProp>();
   const { productId } = route.params;
   const { data: product, isLoading, error, refetch } = useProductDetail(productId);
@@ -45,12 +47,24 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     );
   }
 
-  if (error !== null || product === null) {
+  if (error !== null) {
     return (
       <CenteredState>
         <ErrorView
           title={STRINGS.products.detailErrorTitle}
-          message={error ?? STRINGS.products.detailNotFoundMessage}
+          message={error}
+          onRetry={refetch}
+        />
+      </CenteredState>
+    );
+  }
+
+  if (product === null) {
+    return (
+      <CenteredState>
+        <ErrorView
+          title={STRINGS.products.detailErrorTitle}
+          message={STRINGS.products.detailNotFoundMessage}
           onRetry={refetch}
         />
       </CenteredState>
@@ -62,21 +76,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       ? product.price / (1 - product.discountPercentage / 100)
       : null;
 
-  const stockColor =
-    product.stock > 10
-      ? COLORS.success
-      : product.stock > 0
-      ? COLORS.warning
-      : COLORS.error;
+  const bottomInset = Math.max(insets.bottom, SPACING.sm);
 
   return (
     <View style={styles.rootContainer}>
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.carouselWrapper}>
+        <View style={styles.carouselCard}>
           <ProductCarousel images={product.images} />
           {renderFavoriteButton !== undefined && (
             <View style={styles.floatingFavoriteButton}>
@@ -85,20 +94,31 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           )}
         </View>
 
-        <View style={styles.detailsContainer}>
-          <View style={styles.categoryBadge}>
-            <Typography variant="caption" color={COLORS.accent}>
-              {product.category.toUpperCase()}
-            </Typography>
+        <View style={styles.detailsCard}>
+          <View style={styles.metaRow}>
+            <View style={styles.categoryChip}>
+              <Typography variant="caption" color={COLORS.muted}>
+                {product.category.toUpperCase()}
+              </Typography>
+            </View>
+
+            <View style={styles.ratingRow}>
+              <Typography variant="caption" color={COLORS.ink} style={styles.starText}>
+                {STRINGS.products.starSymbol}
+              </Typography>
+              <Typography variant="caption" color={COLORS.muted} style={styles.ratingText}>
+                {product.rating.toFixed(1)}
+              </Typography>
+            </View>
           </View>
 
-          <Typography variant="heading" color={COLORS.text} style={styles.title}>
+          <Typography variant="heading" color={COLORS.ink} style={styles.title}>
             {product.title}
           </Typography>
 
           {product.brand !== null && (
             <Typography
-              variant="smBold"
+              variant="sm"
               color={COLORS.textSecondary}
               style={styles.brand}
             >
@@ -106,51 +126,30 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </Typography>
           )}
 
-          <View style={styles.priceSection}>
-            <View>
-              <View style={styles.priceRow}>
-                <Typography variant="display" color={COLORS.primary}>
-                  {formatPrice(product.price)}
-                </Typography>
-                {originalPrice !== null && (
-                  <Typography
-                    variant="body"
-                    color={COLORS.textMuted}
-                    style={styles.originalPrice}
-                  >
-                    {formatPrice(originalPrice)}
-                  </Typography>
-                )}
-              </View>
-
-              {product.discountPercentage > 0 && (
-                <View style={styles.discountBadge}>
-                  <Typography variant="caption" color={COLORS.error}>
-                    {`${product.discountPercentage.toFixed(0)}${STRINGS.products.offDiscount}`}
-                  </Typography>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.ratingAndStock}>
-              <View style={styles.ratingBadge}>
-                <Typography variant="title" color={COLORS.topazGold}>
-                  {STRINGS.products.star}{product.rating.toFixed(1)}
+          <View style={styles.stockRow}>
+            {product.stock > 0 ? (
+              <Typography variant="caption" color={COLORS.muted}>
+                {STRINGS.products.stockPrefix}{product.stock}
+              </Typography>
+            ) : (
+              <Typography variant="caption" color={COLORS.danger}>
+                {STRINGS.products.outOfStock}
+              </Typography>
+            )}
+            {product.discountPercentage > 0 && (
+              <View style={styles.discountBadge}>
+                <Typography variant="caption" color={COLORS.ink}>
+                  {`-${Math.round(product.discountPercentage)}%`}
                 </Typography>
               </View>
-              <View style={styles.stockBadge}>
-                <Typography variant="caption" color={stockColor}>
-                  {STRINGS.products.stockPrefix}{product.stock}
-                </Typography>
-              </View>
-            </View>
+            )}
           </View>
 
           <View style={styles.divider} />
 
           <Typography
             variant="title"
-            color={COLORS.primary}
+            color={COLORS.ink}
             style={styles.sectionHeader}
           >
             {STRINGS.products.descriptionHeader}
@@ -165,11 +164,30 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </View>
       </ScrollView>
 
-      {renderBottomAction !== undefined && (
-        <View style={styles.bottomBar}>
-          {renderBottomAction(product)}
+      {/* Fixed bottom bar with price and action button */}
+      <View style={[styles.bottomBarWrapper, { paddingBottom: bottomInset }]}>
+        <View style={styles.bottomPill}>
+          <View style={styles.bottomPriceCol}>
+            <Typography variant="title" color={COLORS.surface} numberOfLines={1}>
+              {formatPrice(product.price)}
+            </Typography>
+            {originalPrice !== null && (
+              <Typography
+                variant="caption"
+                color={COLORS.pillDarkInactiveText}
+                numberOfLines={1}
+                style={styles.originalPriceText}
+              >
+                {formatPrice(originalPrice)}
+              </Typography>
+            )}
+          </View>
+
+          <View style={styles.bottomActionSlot}>
+            {renderBottomAction !== undefined && renderBottomAction(product)}
+          </View>
         </View>
-      )}
+      </View>
     </View>
   );
 };
@@ -179,97 +197,118 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  container: {
+  scrollView: {
     flex: 1,
   },
-  bottomBar: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xl,
+  scrollContent: {
+    paddingBottom: 110,
+  },
+  carouselCard: {
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    borderRadius: RADIUS.card,
+    overflow: 'hidden',
     backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    ...SHADOWS.lg,
-  },
-  content: {
-    paddingBottom: SPACING.xxxl,
-  },
-  carouselWrapper: {
     position: 'relative',
+    ...SHADOWS.card,
   },
   floatingFavoriteButton: {
     position: 'absolute',
-    bottom: -20,
-    right: SPACING.xl,
+    top: SPACING.md,
+    right: SPACING.md,
     zIndex: 10,
   },
-  detailsContainer: {
+  detailsCard: {
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    borderRadius: RADIUS.card,
     padding: SPACING.xl,
     backgroundColor: COLORS.surface,
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    marginTop: -SPACING.md,
-    ...SHADOWS.md,
+    ...SHADOWS.card,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.accentLight,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xxs,
-    borderRadius: RADIUS.round,
-    marginBottom: SPACING.xs,
-  },
-  title: {
-    marginBottom: SPACING.xs,
-  },
-  brand: {
-    marginBottom: SPACING.md,
-  },
-  priceSection: {
+  metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: SPACING.md,
+    marginBottom: SPACING.xs,
   },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: SPACING.sm,
-  },
-  originalPrice: {
-    textDecorationLine: 'line-through',
-  },
-  discountBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.errorLight,
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: SPACING.xxs,
-    borderRadius: RADIUS.xs,
-    marginTop: SPACING.xxs,
-  },
-  ratingAndStock: {
-    alignItems: 'flex-end',
-    gap: SPACING.xxs,
-  },
-  ratingBadge: {
-    backgroundColor: COLORS.topazGoldLight,
+  categoryChip: {
+    backgroundColor: COLORS.imageBackground,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xxs,
-    borderRadius: RADIUS.xs,
+    borderRadius: RADIUS.pill,
   },
-  stockBadge: {
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xxs,
+  },
+  starText: {
+    fontSize: 12,
+    lineHeight: 14,
+  },
+  ratingText: {
+    fontSize: 12,
+    lineHeight: 14,
+  },
+  title: {
+    marginTop: SPACING.xxs,
+  },
+  brand: {
+    marginTop: SPACING.xxs,
+  },
+  stockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  discountBadge: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     paddingHorizontal: SPACING.xs,
     paddingVertical: SPACING.xxs,
+    borderRadius: RADIUS.pill,
   },
   divider: {
     height: 1,
     backgroundColor: COLORS.border,
-    marginVertical: SPACING.lg,
+    marginVertical: SPACING.md,
   },
   sectionHeader: {
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
   description: {
-    lineHeight: 24,
+    lineHeight: 22,
+  },
+  bottomBarWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: SPACING.md,
+    right: SPACING.md,
+    paddingTop: SPACING.xs,
+    backgroundColor: 'transparent',
+  },
+  bottomPill: {
+    backgroundColor: COLORS.pillDark,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    ...SHADOWS.lg,
+  },
+  bottomPriceCol: {
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  originalPriceText: {
+    textDecorationLine: 'line-through',
+  },
+  bottomActionSlot: {
+    flex: 1,
+    minWidth: 0,
   },
 });

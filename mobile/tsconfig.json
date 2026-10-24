@@ -3,9 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true,
+    "skipLibCheck": true,
     "types": ["jest"],
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*", "App.tsx", "index.ts"],
+  "exclude": ["node_modules"]
 }

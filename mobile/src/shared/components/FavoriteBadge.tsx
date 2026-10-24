@@ -27,8 +27,8 @@ export const FavoriteBadge: React.FC<FavoriteBadgeProps> = ({
     width: size,
     height: size,
     borderRadius: RADIUS.round,
-    backgroundColor: isFavorite ? COLORS.favoriteLight : COLORS.surface,
-    borderColor: isFavorite ? COLORS.favorite : COLORS.border,
+    backgroundColor: isFavorite ? COLORS.ink : COLORS.surface,
+    borderColor: isFavorite ? COLORS.ink : COLORS.border,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -38,7 +38,7 @@ export const FavoriteBadge: React.FC<FavoriteBadgeProps> = ({
     <View style={[containerStyle, style]}>
       <Typography
         variant="smBold"
-        color={isFavorite ? COLORS.favorite : COLORS.textMuted}
+        color={isFavorite ? COLORS.surface : COLORS.ink}
       >
         {isFavorite ? '♥' : '♡'}
       </Typography>

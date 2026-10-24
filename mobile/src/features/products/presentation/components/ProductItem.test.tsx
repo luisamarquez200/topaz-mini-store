@@ -53,13 +53,13 @@ describe('ProductItem', () => {
   it('should trigger onPress callback with productId when pressed', async () => {
     // Arrange
     const onPressMock = jest.fn();
-    const { getByRole } = await render(
+    const { getByLabelText } = await render(
       <ProductItem product={sampleProduct} onPress={onPressMock} />
     );
 
     // Act
-    const button = getByRole('button');
-    fireEvent.press(button);
+    const card = getByLabelText(SAMPLE_TITLE);
+    fireEvent.press(card);
 
     // Assert
     expect(onPressMock).toHaveBeenCalledTimes(1);
