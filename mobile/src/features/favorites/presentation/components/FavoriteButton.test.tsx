@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react-native';
 import { STRINGS } from '@/core/theme/strings';
 import { Product } from '@/features/products/domain/types/Product';
 import { ProductCategory } from '@/features/products/domain/types/ProductCategory';
-import { FavoriteButton } from '@/shared/components/FavoriteButton';
+import { FavoriteButton } from '@/features/favorites/presentation/components/FavoriteButton';
 import { useFavoritesStore } from '@/features/favorites/presentation/stores/useFavoritesStore';
 
 describe('FavoriteButton', () => {

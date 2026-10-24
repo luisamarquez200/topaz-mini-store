@@ -1,10 +1,5 @@
 import React, { useCallback } from 'react';
-import {
-  FlatList,
-  ListRenderItemInfo,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/core/theme/colors';
@@ -83,7 +78,9 @@ export const FavoritesListView: React.FC = () => {
       <ProductItem
         product={item}
         onPress={handleProductPress}
-        rightAction={<FavoriteButton product={item} size={FAVORITE_BUTTON_SIZE} />}
+        rightAction={
+          <FavoriteButton product={item} size={FAVORITE_BUTTON_SIZE} />
+        }
       />
     ),
     [handleProductPress]

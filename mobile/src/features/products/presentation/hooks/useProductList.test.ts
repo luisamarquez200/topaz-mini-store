@@ -16,7 +16,9 @@ describe('useProductList', () => {
   const SAMPLE_STOCK = 100;
   const SAMPLE_BRAND = 'LipGlam';
   const SAMPLE_THUMBNAIL = 'https://example.com/lip.jpg';
-  const SAMPLE_IMAGES: readonly string[] = Object.freeze(['https://example.com/1.jpg']);
+  const SAMPLE_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/1.jpg',
+  ]);
   const ERROR_MSG = 'Network timeout occurred';
 
   const sampleProduct: Product = {

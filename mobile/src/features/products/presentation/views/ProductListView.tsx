@@ -18,6 +18,7 @@ import { Product } from '@/features/products/domain/types/Product';
 import { CategoryChips } from '@/features/products/presentation/components/CategoryChips';
 import { ProductItem } from '@/features/products/presentation/components/ProductItem';
 import { SearchBar } from '@/features/products/presentation/components/SearchBar';
+import { SortChips } from '@/features/products/presentation/components/SortChips';
 import { SearchEmptyState } from '@/features/products/presentation/components/SearchEmptyState';
 import { useProductFilters } from '@/features/products/presentation/hooks/useProductFilters';
 import { useProductList } from '@/features/products/presentation/hooks/useProductList';
@@ -28,7 +29,13 @@ const keyExtractor = (item: Product): string => item.id.toString();
 
 const ItemSeparator: React.FC = () => <View style={styles.separator} />;
 
-export const ProductListView: React.FC = () => {
+export interface ProductListViewProps {
+  readonly renderItemAction?: (product: Product) => React.ReactNode;
+}
+
+export const ProductListView: React.FC<ProductListViewProps> = ({
+  renderItemAction,
+}) => {
   const navigation = useNavigation();
   const { data, isLoading, error, refetch } = useProductList();
   const {
@@ -36,6 +43,8 @@ export const ProductListView: React.FC = () => {
     setQuery,
     category,
     setCategory,
+    sort,
+    setSort,
     categories,
     filteredProducts,
     hasActiveFilters,
@@ -51,9 +60,13 @@ export const ProductListView: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Product>) => (
-      <ProductItem product={item} onPress={handleProductPress} />
+      <ProductItem
+        product={item}
+        onPress={handleProductPress}
+        rightAction={renderItemAction?.(item)}
+      />
     ),
-    [handleProductPress]
+    [handleProductPress, renderItemAction]
   );
 
   const listHeader = useMemo(
@@ -77,9 +90,14 @@ export const ProductListView: React.FC = () => {
           onSelectCategory={setCategory}
           style={styles.categoryChips}
         />
+        <SortChips
+          selectedSort={sort}
+          onSelectSort={setSort}
+          style={styles.sortChips}
+        />
       </View>
     ),
-    [query, setQuery, category, setCategory, categories]
+    [query, setQuery, category, setCategory, categories, sort, setSort]
   );
 
   const listEmpty = useMemo(() => {
@@ -165,6 +183,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   categoryChips: {
+    marginBottom: SPACING.xs,
+  },
+  sortChips: {
     marginBottom: SPACING.xs,
   },
   listContent: {

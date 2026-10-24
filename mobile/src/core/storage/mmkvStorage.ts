@@ -17,7 +17,6 @@ try {
     mmkvInstance = mmkvModule.createMMKV({ id: STORAGE_ID });
   }
 } catch {
-  // Graceful fallback for non-native test environments (e.g. Jest / Node)
   mmkvInstance = null;
 }
 

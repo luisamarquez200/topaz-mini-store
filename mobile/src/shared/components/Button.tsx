@@ -97,11 +97,7 @@ export const Button: React.FC<ButtonProps> = ({
           style={styles.spinner}
         />
       ) : (
-        <Typography
-          variant="subtitle"
-          color={getTextColor()}
-          style={textStyle}
-        >
+        <Typography variant="subtitle" color={getTextColor()} style={textStyle}>
           {title}
         </Typography>
       )}

@@ -14,6 +14,8 @@ export const mapProductDtoToDomain = (dto: ProductDto): Product => {
     stock: dto.stock,
     brand: dto.brand ?? null,
     thumbnail: dto.thumbnail,
-    images: Array.isArray(dto.images) ? Object.freeze([...dto.images]) : Object.freeze([]),
+    images: Array.isArray(dto.images)
+      ? Object.freeze([...dto.images])
+      : Object.freeze([]),
   };
 };

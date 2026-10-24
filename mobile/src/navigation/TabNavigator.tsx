@@ -12,10 +12,24 @@ import { STRINGS } from '@/core/theme/strings';
 import { FONT_FAMILY } from '@/core/theme/typography';
 import { MainTabParamList } from '@/navigation/types';
 import { ProductListView } from '@/features/products/presentation/views/ProductListView';
+import { Product } from '@/features/products/domain/types/Product';
+import { FavoriteButton } from '@/features/favorites/presentation/components/FavoriteButton';
 import { FavoritesListView } from '@/features/favorites/presentation/views/FavoritesListView';
 import { useFavoritesCount } from '@/features/favorites/presentation/hooks/useFavorites';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const TAB_BAR_BASE_HEIGHT = 56;
+const MAX_BADGE_COUNT = 99;
+const BADGE_FONT_SIZE = 10;
+
+const renderProductFavoriteButton = (product: Product): React.ReactNode => (
+  <FavoriteButton product={product} />
+);
+
+const ProductsScreen: React.FC = () => (
+  <ProductListView renderItemAction={renderProductFavoriteButton} />
+);
 
 const BASE_TAB_OPTIONS: BottomTabNavigationOptions = {
   headerStyle: {
@@ -50,12 +64,17 @@ const getFavoritesTabOptions = (count: number): BottomTabNavigationOptions => ({
   tabBarLabelStyle: {
     fontFamily: FONT_FAMILY.medium,
   },
-  tabBarBadge: count > 99 ? '99+' : count > 0 ? count : undefined,
+  tabBarBadge:
+    count > MAX_BADGE_COUNT
+      ? `${MAX_BADGE_COUNT}+`
+      : count > 0
+        ? count
+        : undefined,
   tabBarBadgeStyle: {
     backgroundColor: COLORS.ink,
     color: COLORS.surface,
     fontFamily: FONT_FAMILY.bold,
-    fontSize: 10,
+    fontSize: BADGE_FONT_SIZE,
   },
   tabBarIcon: ({ color, size, focused }) => (
     <Ionicons
@@ -77,7 +96,7 @@ export const TabNavigator: React.FC = () => {
       tabBarStyle: {
         backgroundColor: COLORS.surface,
         borderTopColor: COLORS.border,
-        height: 56 + bottomInset,
+        height: TAB_BAR_BASE_HEIGHT + bottomInset,
         paddingBottom: bottomInset,
         paddingTop: SPACING.xs,
         ...SHADOWS.md,
@@ -92,13 +111,10 @@ export const TabNavigator: React.FC = () => {
   );
 
   return (
-    <Tab.Navigator
-      initialRouteName="ProductsTab"
-      screenOptions={screenOptions}
-    >
+    <Tab.Navigator initialRouteName="ProductsTab" screenOptions={screenOptions}>
       <Tab.Screen
         name="ProductsTab"
-        component={ProductListView}
+        component={ProductsScreen}
         options={getProductsTabOptions}
       />
       <Tab.Screen

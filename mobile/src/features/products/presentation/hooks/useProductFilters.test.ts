@@ -36,7 +36,9 @@ describe('useProductFilters', () => {
 
   it('should derive sorted unique categories with Todos first', async () => {
     // Arrange & Act
-    const { result } = await renderHook(() => useProductFilters(sampleProducts));
+    const { result } = await renderHook(() =>
+      useProductFilters(sampleProducts)
+    );
 
     // Assert
     expect(result.current.categories).toEqual([
@@ -48,7 +50,9 @@ describe('useProductFilters', () => {
 
   it('should detect active filters and clear them with clearFilters', async () => {
     // Arrange
-    const { result } = await renderHook(() => useProductFilters(sampleProducts));
+    const { result } = await renderHook(() =>
+      useProductFilters(sampleProducts)
+    );
 
     // Act
     await act(async () => {

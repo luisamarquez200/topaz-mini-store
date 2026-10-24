@@ -11,7 +11,7 @@ import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
 import { STRINGS } from '@/core/theme/strings';
 import { Typography } from '@/shared/components/Typography';
-import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
+import { formatCategoryLabel } from '@/features/products/application/formatCategoryLabel';
 
 export interface CategoryChipsProps {
   readonly categories: readonly string[];

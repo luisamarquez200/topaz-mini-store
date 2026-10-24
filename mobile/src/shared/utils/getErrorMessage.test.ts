@@ -38,9 +38,18 @@ describe('getErrorMessage', () => {
     const errorInstanceWithEmptyMessage = new Error(EMPTY_STRING);
 
     // Act
-    const resultEmpty = getErrorMessage(errorWithEmptyMessage, FALLBACK_MESSAGE);
-    const resultWhitespace = getErrorMessage(errorWithWhitespaceMessage, FALLBACK_MESSAGE);
-    const resultErrorInstance = getErrorMessage(errorInstanceWithEmptyMessage, FALLBACK_MESSAGE);
+    const resultEmpty = getErrorMessage(
+      errorWithEmptyMessage,
+      FALLBACK_MESSAGE
+    );
+    const resultWhitespace = getErrorMessage(
+      errorWithWhitespaceMessage,
+      FALLBACK_MESSAGE
+    );
+    const resultErrorInstance = getErrorMessage(
+      errorInstanceWithEmptyMessage,
+      FALLBACK_MESSAGE
+    );
 
     // Assert
     expect(resultEmpty).toBe(FALLBACK_MESSAGE);

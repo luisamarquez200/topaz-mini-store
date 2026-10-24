@@ -1,4 +1,4 @@
-import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
+import { formatCategoryLabel } from '@/features/products/application/formatCategoryLabel';
 
 describe('formatCategoryLabel', () => {
   it('should translate known hyphenated categories into Spanish', () => {

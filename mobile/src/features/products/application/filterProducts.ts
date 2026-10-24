@@ -34,14 +34,12 @@ export const filterProducts = (
     category.toLowerCase() === 'todos';
 
   const filtered = products.filter((product) => {
-    // Category check
     if (!isAllCategories) {
       if (product.category.toLowerCase() !== category.toLowerCase()) {
         return false;
       }
     }
 
-    // Query check (matches title, brand, or category)
     if (normalizedQuery.length > 0) {
       const titleNorm = normalizeText(product.title);
       const brandNorm =

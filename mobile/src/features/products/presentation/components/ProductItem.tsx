@@ -1,9 +1,5 @@
 import React, { useCallback } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useAnimatedStyle,
@@ -14,10 +10,10 @@ import { COLORS } from '@/core/theme/colors';
 import { RADIUS, SPACING } from '@/core/theme/spacing';
 import { SHADOWS } from '@/core/theme/shadows';
 import { STRINGS } from '@/core/theme/strings';
-import { FavoriteButton } from '@/shared/components/FavoriteButton';
 import { Typography } from '@/shared/components/Typography';
+import { getOriginalPrice } from '@/features/products/domain/pricing';
 import { Product } from '@/features/products/domain/types/Product';
-import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
+import { formatCategoryLabel } from '@/features/products/application/formatCategoryLabel';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 
 const PRODUCT_IMAGE_SIZE = 96;
@@ -54,10 +50,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
       onPress(product.id);
     }, [onPress, product.id]);
 
-    const originalPrice =
-      product.discountPercentage > 0
-        ? product.price / (1 - product.discountPercentage / 100)
-        : null;
+    const originalPrice = getOriginalPrice(product);
 
     return (
       <AnimatedPressable
@@ -86,11 +79,7 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
         </View>
 
         <View style={styles.info}>
-          <Typography
-            variant="caption"
-            color={COLORS.muted}
-            numberOfLines={1}
-          >
+          <Typography variant="caption" color={COLORS.muted} numberOfLines={1}>
             {formatCategoryLabel(product.category).toUpperCase()}
           </Typography>
 
@@ -104,10 +93,18 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
           </Typography>
 
           <View style={styles.ratingRow}>
-            <Typography variant="caption" color={COLORS.ink} style={styles.starText}>
+            <Typography
+              variant="caption"
+              color={COLORS.ink}
+              style={styles.starText}
+            >
               {STRINGS.products.starSymbol}
             </Typography>
-            <Typography variant="caption" color={COLORS.muted} style={styles.ratingText}>
+            <Typography
+              variant="caption"
+              color={COLORS.muted}
+              style={styles.ratingText}
+            >
               {product.rating.toFixed(1)}
             </Typography>
           </View>
@@ -136,9 +133,9 @@ export const ProductItem: React.FC<ProductItemProps> = React.memo(
           </View>
         </View>
 
-        <View style={styles.actionContainer}>
-          {rightAction ?? <FavoriteButton product={product} />}
-        </View>
+        {rightAction !== undefined && (
+          <View style={styles.actionContainer}>{rightAction}</View>
+        )}
       </AnimatedPressable>
     );
   }

@@ -14,7 +14,9 @@ describe('GetProductsUseCase', () => {
   const SAMPLE_STOCK = 50;
   const SAMPLE_BRAND = 'Essence';
   const SAMPLE_THUMBNAIL = 'https://example.com/thumb.jpg';
-  const SAMPLE_IMAGES: readonly string[] = Object.freeze(['https://example.com/1.jpg']);
+  const SAMPLE_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/1.jpg',
+  ]);
   const ERROR_MESSAGE = 'Network Error';
 
   const createSampleProduct = (id: number): Product => ({

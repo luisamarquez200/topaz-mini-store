@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/core/theme/colors';
@@ -14,9 +10,10 @@ import { CenteredState } from '@/shared/components/CenteredState';
 import { ErrorView } from '@/shared/components/ErrorView';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { Typography } from '@/shared/components/Typography';
+import { getOriginalPrice } from '@/features/products/domain/pricing';
 import { ProductCarousel } from '@/features/products/presentation/components/ProductCarousel';
 import { useProductDetail } from '@/features/products/presentation/hooks/useProductDetail';
-import { formatCategoryLabel } from '@/features/products/presentation/utils/formatCategoryLabel';
+import { formatCategoryLabel } from '@/features/products/application/formatCategoryLabel';
 import { formatPrice } from '@/features/products/presentation/utils/formatPrice';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -38,7 +35,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const insets = useSafeAreaInsets();
   const route = useRoute<ProductDetailRouteProp>();
   const { productId } = route.params;
-  const { data: product, isLoading, error, refetch } = useProductDetail(productId);
+  const {
+    data: product,
+    isLoading,
+    error,
+    refetch,
+  } = useProductDetail(productId);
 
   if (isLoading) {
     return (
@@ -72,10 +74,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     );
   }
 
-  const originalPrice =
-    product.discountPercentage > 0
-      ? product.price / (1 - product.discountPercentage / 100)
-      : null;
+  const originalPrice = getOriginalPrice(product);
 
   const bottomInset = Math.max(insets.bottom, SPACING.sm);
 
@@ -104,10 +103,18 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </View>
 
             <View style={styles.ratingRow}>
-              <Typography variant="caption" color={COLORS.ink} style={styles.starText}>
+              <Typography
+                variant="caption"
+                color={COLORS.ink}
+                style={styles.starText}
+              >
                 {STRINGS.products.starSymbol}
               </Typography>
-              <Typography variant="caption" color={COLORS.muted} style={styles.ratingText}>
+              <Typography
+                variant="caption"
+                color={COLORS.muted}
+                style={styles.ratingText}
+              >
                 {product.rating.toFixed(1)}
               </Typography>
             </View>
@@ -123,14 +130,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               color={COLORS.textSecondary}
               style={styles.brand}
             >
-              {STRINGS.products.brandPrefix}{product.brand}
+              {STRINGS.products.brandPrefix}
+              {product.brand}
             </Typography>
           )}
 
           <View style={styles.stockRow}>
             {product.stock > 0 ? (
               <Typography variant="caption" color={COLORS.muted}>
-                {STRINGS.products.stockPrefix}{product.stock}
+                {STRINGS.products.stockPrefix}
+                {product.stock}
               </Typography>
             ) : (
               <Typography variant="caption" color={COLORS.danger}>
@@ -169,7 +178,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       <View style={[styles.bottomBarWrapper, { paddingBottom: bottomInset }]}>
         <View style={styles.bottomPill}>
           <View style={styles.bottomPriceCol}>
-            <Typography variant="title" color={COLORS.surface} numberOfLines={1}>
+            <Typography
+              variant="title"
+              color={COLORS.surface}
+              numberOfLines={1}
+            >
               {formatPrice(product.price)}
             </Typography>
             {originalPrice !== null && (

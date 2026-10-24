@@ -12,7 +12,9 @@ describe('useFavoritesStore', () => {
   const PRODUCT_A_STOCK = 5;
   const PRODUCT_A_BRAND = 'Essence';
   const PRODUCT_A_THUMBNAIL = 'https://example.com/mascara.png';
-  const PRODUCT_A_IMAGES: readonly string[] = Object.freeze(['https://example.com/mascara-1.png']);
+  const PRODUCT_A_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/mascara-1.png',
+  ]);
 
   const PRODUCT_B_ID = 2;
   const PRODUCT_B_TITLE = 'Eyeshadow Palette';
@@ -23,7 +25,9 @@ describe('useFavoritesStore', () => {
   const PRODUCT_B_STOCK = 15;
   const PRODUCT_B_BRAND = 'Glamour';
   const PRODUCT_B_THUMBNAIL = 'https://example.com/eyeshadow.png';
-  const PRODUCT_B_IMAGES: readonly string[] = Object.freeze(['https://example.com/eyeshadow-1.png']);
+  const PRODUCT_B_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/eyeshadow-1.png',
+  ]);
 
   const NON_EXISTENT_PRODUCT_ID = 999;
 

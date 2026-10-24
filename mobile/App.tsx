@@ -12,9 +12,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { RootNavigator } from '@/navigation/RootNavigator';
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Ignore error if already invoked
-});
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -26,9 +24,7 @@ export default function App() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync().catch(() => {
-        // Ignore error
-      });
+      SplashScreen.hideAsync().catch(() => undefined);
     }
   }, [fontsLoaded]);
 

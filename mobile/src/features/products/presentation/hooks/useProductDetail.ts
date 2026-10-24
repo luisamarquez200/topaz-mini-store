@@ -12,56 +12,70 @@ export interface UseProductDetailState {
   readonly refetch: () => Promise<void>;
 }
 
+interface DetailResult {
+  readonly productId: number;
+  readonly data: Product | null;
+  readonly error: string | null;
+}
+
 export const useProductDetail = (
   productId: number,
   useCase: GetProductByIdUseCase = container.getProductByIdUseCase
 ): UseProductDetailState => {
-  const [data, setData] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<DetailResult | null>(null);
+  const [isRefetching, setIsRefetching] = useState<boolean>(false);
 
   const isMountedRef = useRef<boolean>(true);
-  const activeIdRef = useRef<number>(productId);
 
-  const fetchProduct = useCallback(async (): Promise<void> => {
-    activeIdRef.current = productId;
-    setIsLoading(true);
-    setError(null);
-
+  const fetchProduct = useCallback(async (): Promise<DetailResult> => {
     try {
       const product = await useCase.execute(productId);
-      if (isMountedRef.current && activeIdRef.current === productId) {
-        if (product === null) {
-          setError(STRINGS.products.notFound);
-        } else {
-          setData(product);
-        }
-      }
+      return product === null
+        ? { productId, data: null, error: STRINGS.products.notFound }
+        : { productId, data: product, error: null };
     } catch (err: unknown) {
-      if (isMountedRef.current && activeIdRef.current === productId) {
-        setError(getErrorMessage(err, STRINGS.products.detailLoadError));
-      }
-    } finally {
-      if (isMountedRef.current && activeIdRef.current === productId) {
-        setIsLoading(false);
-      }
+      return {
+        productId,
+        data: null,
+        error: getErrorMessage(err, STRINGS.products.detailLoadError),
+      };
     }
   }, [productId, useCase]);
 
+  const applyResult = useCallback((next: DetailResult): void => {
+    setResult(next);
+    setIsRefetching(false);
+  }, []);
+
   useEffect(() => {
     isMountedRef.current = true;
-    activeIdRef.current = productId;
-    void fetchProduct();
+    let isActive = true;
+    void fetchProduct().then((next) => {
+      if (isActive) {
+        applyResult(next);
+      }
+    });
 
     return () => {
+      isActive = false;
       isMountedRef.current = false;
     };
-  }, [fetchProduct, productId]);
+  }, [fetchProduct, applyResult]);
+
+  const refetch = useCallback(async (): Promise<void> => {
+    setIsRefetching(true);
+    const next = await fetchProduct();
+    if (isMountedRef.current) {
+      applyResult(next);
+    }
+  }, [fetchProduct, applyResult]);
+
+  const current = result?.productId === productId ? result : null;
 
   return {
-    data,
-    isLoading,
-    error,
-    refetch: fetchProduct,
+    data: current?.data ?? null,
+    isLoading: current === null || isRefetching,
+    error: current?.error ?? null,
+    refetch,
   };
 };

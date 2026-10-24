@@ -14,7 +14,9 @@ describe('productMapper', () => {
   const SAMPLE_STOCK = 25;
   const SAMPLE_BRAND = 'TopazTech';
   const SAMPLE_THUMBNAIL = 'https://example.com/tablet.png';
-  const SAMPLE_IMAGES: readonly string[] = Object.freeze(['https://example.com/img1.png']);
+  const SAMPLE_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/img1.png',
+  ]);
 
   it('should map valid ProductDto to domain Product entity accurately', () => {
     // Arrange

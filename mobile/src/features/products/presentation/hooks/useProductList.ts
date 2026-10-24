@@ -12,6 +12,10 @@ export interface UseProductListState {
   readonly refetch: () => Promise<void>;
 }
 
+type FetchOutcome =
+  | { readonly products: readonly Product[]; readonly error: null }
+  | { readonly products: null; readonly error: string };
+
 export const useProductList = (
   useCase: GetProductsUseCase = container.getProductsUseCase
 ): UseProductListState => {
@@ -21,39 +25,53 @@ export const useProductList = (
 
   const isMountedRef = useRef<boolean>(true);
 
-  const fetchProducts = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-
+  const fetchProducts = useCallback(async (): Promise<FetchOutcome> => {
     try {
-      const products = await useCase.execute();
-      if (isMountedRef.current) {
-        setData(products);
-      }
+      return { products: await useCase.execute(), error: null };
     } catch (err: unknown) {
-      if (isMountedRef.current) {
-        setError(getErrorMessage(err, STRINGS.products.loadError));
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
+      return {
+        products: null,
+        error: getErrorMessage(err, STRINGS.products.loadError),
+      };
     }
   }, [useCase]);
 
+  const applyOutcome = useCallback((outcome: FetchOutcome): void => {
+    if (outcome.products !== null) {
+      setData(outcome.products);
+    }
+    setError(outcome.error);
+    setIsLoading(false);
+  }, []);
+
   useEffect(() => {
     isMountedRef.current = true;
-    void fetchProducts();
+    let isActive = true;
+    void fetchProducts().then((outcome) => {
+      if (isActive) {
+        applyOutcome(outcome);
+      }
+    });
 
     return () => {
+      isActive = false;
       isMountedRef.current = false;
     };
-  }, [fetchProducts]);
+  }, [fetchProducts, applyOutcome]);
+
+  const refetch = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    const outcome = await fetchProducts();
+    if (isMountedRef.current) {
+      applyOutcome(outcome);
+    }
+  }, [fetchProducts, applyOutcome]);
 
   return {
     data,
     isLoading,
     error,
-    refetch: fetchProducts,
+    refetch,
   };
 };

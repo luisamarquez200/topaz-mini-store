@@ -16,7 +16,9 @@ describe('ProductItem', () => {
   const SAMPLE_STOCK = 50;
   const SAMPLE_BRAND = 'Essence';
   const SAMPLE_THUMBNAIL = 'https://example.com/mascara.jpg';
-  const SAMPLE_IMAGES: readonly string[] = Object.freeze(['https://example.com/1.jpg']);
+  const SAMPLE_IMAGES: readonly string[] = Object.freeze([
+    'https://example.com/1.jpg',
+  ]);
 
   const sampleProduct: Product = {
     id: SAMPLE_PRODUCT_ID,

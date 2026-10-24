@@ -21,6 +21,7 @@ import { STRINGS } from '@/core/theme/strings';
 import { triggerHaptic } from '@/core/utils/haptics';
 import { Typography } from '@/shared/components/Typography';
 import { Product } from '@/features/products/domain/types/Product';
+import { useIsFavorite } from '@/features/favorites/presentation/hooks/useFavorites';
 import { useFavoritesStore } from '@/features/favorites/presentation/stores/useFavoritesStore';
 
 const DEFAULT_BUTTON_SIZE = 44;
@@ -39,10 +40,7 @@ export interface FavoriteButtonProps {
 
 export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
   ({ product, size = DEFAULT_BUTTON_SIZE, variant = 'icon', style }) => {
-    // Granular selector: returns primitive boolean so other list items never re-render
-    const isFav = useFavoritesStore((state) =>
-      state.favorites.some((item) => item.id === product.id)
-    );
+    const isFav = useIsFavorite(product.id);
     const toggle = useFavoritesStore((state) => state.toggle);
     const scale = useSharedValue(INITIAL_SCALE);
 
@@ -87,11 +85,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = React.memo(
             />
           </Animated.View>
           <View style={styles.textSpacer} />
-          <Typography
-            variant="bodyBold"
-            color={COLORS.ink}
-            numberOfLines={1}
-          >
+          <Typography variant="bodyBold" color={COLORS.ink} numberOfLines={1}>
             {isFav
               ? STRINGS.favorites.savedFavorite
               : STRINGS.favorites.saveFavorite}
