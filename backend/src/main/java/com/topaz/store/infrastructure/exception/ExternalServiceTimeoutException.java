@@ -1,6 +1,6 @@
 package com.topaz.store.infrastructure.exception;
 
-public class ExternalServiceTimeoutException extends RuntimeException {
+public class ExternalServiceTimeoutException extends ExternalServiceException {
     public ExternalServiceTimeoutException(String message) {
         super(message);
     }

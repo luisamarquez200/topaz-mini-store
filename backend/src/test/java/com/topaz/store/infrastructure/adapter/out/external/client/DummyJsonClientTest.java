@@ -27,8 +27,8 @@ class DummyJsonClientTest {
     private static final String PRODUCTS_ENDPOINT = BASE_URL + "/products?limit=0";
     private static final String PRODUCT_BY_ID_ENDPOINT = BASE_URL + "/products/1";
     private static final String NON_EXISTING_ENDPOINT = BASE_URL + "/products/999";
-    private static final Long EXISTING_PRODUCT_ID = 1L;
-    private static final Long NON_EXISTING_PRODUCT_ID = 999L;
+    private static final long EXISTING_PRODUCT_ID = 1L;
+    private static final long NON_EXISTING_PRODUCT_ID = 999L;
     private static final String TIMEOUT_MESSAGE = "Read timed out";
 
     private static final String ENVELOPE_JSON_RESPONSE = """
@@ -141,7 +141,8 @@ class DummyJsonClientTest {
 
         // Act & Assert
         assertThatThrownBy(() -> dummyJsonClient.getAllProducts())
-                .isInstanceOf(ExternalServiceException.class);
+                .isInstanceOf(ExternalServiceException.class)
+                .hasMessageContaining("DummyJSON failed trying to fetch products");
         mockServer.verify();
     }
 
@@ -157,7 +158,8 @@ class DummyJsonClientTest {
         // Act & Assert
         assertThatThrownBy(() -> dummyJsonClient.getAllProducts())
                 .isInstanceOf(ExternalServiceTimeoutException.class)
-                .hasMessageContaining(TIMEOUT_MESSAGE);
+                .hasMessageContaining("Timeout trying to fetch products")
+                .hasRootCauseInstanceOf(SocketTimeoutException.class);
         mockServer.verify();
     }
 }

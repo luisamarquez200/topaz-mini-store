@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface ProductExternalPort {
     List<Product> fetchAllProducts();
-    Optional<Product> fetchProductById(Long id);
+    Optional<Product> fetchProductById(long id);
 }

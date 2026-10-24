@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-    private static final Long NON_EXISTING_PRODUCT_ID = 999L;
+    private static final long NON_EXISTING_PRODUCT_ID = 999L;
     private static final String EXTERNAL_ERROR_MSG = "Upstream connection failure";
 
     @Mock
@@ -79,19 +79,6 @@ class ProductServiceTest {
         // Assert
         assertThat(actualProduct).isEmpty();
         verify(productExternalPort).fetchProductById(NON_EXISTING_PRODUCT_ID);
-    }
-
-    @Test
-    @DisplayName("Should return empty optional when id is null without calling port")
-    void execute_shouldReturnEmpty_whenIdIsNull() {
-        // Arrange
-        Long nullId = null;
-
-        // Act
-        Optional<Product> actualProduct = productService.execute(nullId);
-
-        // Assert
-        assertThat(actualProduct).isEmpty();
     }
 
     @Test

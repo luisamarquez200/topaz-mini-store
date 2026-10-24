@@ -23,10 +23,7 @@ public class ProductService implements GetProductsUseCase, GetProductByIdUseCase
     }
 
     @Override
-    public Optional<Product> execute(Long id) {
-        if (id == null) {
-            return Optional.empty();
-        }
+    public Optional<Product> execute(long id) {
         return productExternalPort.fetchProductById(id);
     }
 }

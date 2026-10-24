@@ -36,8 +36,8 @@ class ProductControllerTest {
     private static final String BASE_URL = "/api/products";
     private static final String BY_ID_URL = "/api/products/{id}";
     private static final String NON_NUMERIC_ID = "invalid-id";
-    private static final Long EXISTING_ID = ProductFixtures.DEFAULT_ID;
-    private static final Long NON_EXISTING_ID = 999L;
+    private static final long EXISTING_ID = ProductFixtures.DEFAULT_ID;
+    private static final long NON_EXISTING_ID = 999L;
     private static final String UPSTREAM_ERROR_MSG = "Upstream server returned error 502";
     private static final String UPSTREAM_TIMEOUT_MSG = "Upstream service timed out";
     private static final String UNEXPECTED_SECRET_ERROR = "Secret database connection failed: credentials leak";
@@ -102,7 +102,7 @@ class ProductControllerTest {
         mockMvc.perform(get(BY_ID_URL, NON_EXISTING_ID).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status", is(404)))
-                .andExpect(jsonPath("$.title", is("Resource Not Found")))
+                .andExpect(jsonPath("$.title", is("Resource not found")))
                 .andExpect(jsonPath("$.detail", containsString(String.valueOf(NON_EXISTING_ID))));
     }
 
@@ -117,7 +117,7 @@ class ProductControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/products should return 502 ProblemDetail when upstream service fails")
+    @DisplayName("GET /api/products should return 502 ProblemDetail when upstream service fails without exposing internal details")
     void getAllProducts_shouldReturn502_whenUpstreamFails() throws Exception {
         // Arrange
         when(getProductsUseCase.execute()).thenThrow(new ExternalServiceException(UPSTREAM_ERROR_MSG));
@@ -126,12 +126,12 @@ class ProductControllerTest {
         mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.status", is(502)))
-                .andExpect(jsonPath("$.title", is("Bad Gateway")))
-                .andExpect(jsonPath("$.detail", is(UPSTREAM_ERROR_MSG)));
+                .andExpect(jsonPath("$.title", is("Upstream error")))
+                .andExpect(jsonPath("$.detail", is("The product catalog is currently unavailable.")));
     }
 
     @Test
-    @DisplayName("GET /api/products should return 504 ProblemDetail when upstream service times out")
+    @DisplayName("GET /api/products should return 504 ProblemDetail when upstream service times out without exposing internal details")
     void getAllProducts_shouldReturn504_whenUpstreamTimesOut() throws Exception {
         // Arrange
         when(getProductsUseCase.execute()).thenThrow(new ExternalServiceTimeoutException(UPSTREAM_TIMEOUT_MSG));
@@ -140,8 +140,8 @@ class ProductControllerTest {
         mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.status", is(504)))
-                .andExpect(jsonPath("$.title", is("Gateway Timeout")))
-                .andExpect(jsonPath("$.detail", is(UPSTREAM_TIMEOUT_MSG)));
+                .andExpect(jsonPath("$.title", is("Upstream timeout")))
+                .andExpect(jsonPath("$.detail", is("The product catalog did not respond in time.")));
     }
 
     @Test
@@ -154,8 +154,8 @@ class ProductControllerTest {
         mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_PROBLEM_JSON, MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status", is(500)))
-                .andExpect(jsonPath("$.title", is("Internal Server Error")))
-                .andExpect(jsonPath("$.detail", is("An unexpected internal server error occurred")))
+                .andExpect(jsonPath("$.title", is("Internal server error")))
+                .andExpect(jsonPath("$.detail", is("An unexpected error occurred.")))
                 .andExpect(jsonPath("$.detail", not(containsString(UNEXPECTED_SECRET_ERROR))));
     }
 }
